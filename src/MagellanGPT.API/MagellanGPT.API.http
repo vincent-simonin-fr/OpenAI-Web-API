@@ -1,0 +1,7 @@
+﻿@MagellanGPT.API_HostAddress = http://localhost:5030
+
+GET {{MagellanGPT.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+
