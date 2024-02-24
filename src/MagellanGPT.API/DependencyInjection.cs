@@ -1,5 +1,8 @@
 ﻿using MagellanGPT.API.Services;
 using MagellanGPT.Application.Common.Interfaces;
+using MagellanGPT.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
 
 namespace MagellanGPT.API;
@@ -9,8 +12,12 @@ public static class DependencyInjection
     public static IServiceCollection AddAPIServices(this IServiceCollection services)
     {
         services.AddHttpContextAccessor();
-        services.AddHealthChecks();
-            // .AddDbContextCheck<ApplicationDbContext>();
+        services.AddHealthChecks()
+            .AddDbContextCheck<ApplicationDbContext>(
+                    null,
+                    HealthStatus.Unhealthy,
+                    null,
+                    PerformCosmosHealthCheck());
 
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 
@@ -43,5 +50,19 @@ public static class DependencyInjection
 
         return services;
     }
+
+    private static Func<ApplicationDbContext, CancellationToken, Task<bool>> PerformCosmosHealthCheck() =>
+      async (context, _) =>
+      {
+          try
+          {
+              await context.Database.GetCosmosClient().ReadAccountAsync().ConfigureAwait(false);
+          }
+          catch (HttpRequestException)
+          {
+              return false;
+          }
+          return true;
+      };
 }
 

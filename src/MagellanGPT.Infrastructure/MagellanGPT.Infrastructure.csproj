@@ -9,10 +9,14 @@
   <ItemGroup>
     <None Remove="Persistence\" />
     <None Remove="Identity\" />
+    <None Remove="OpenAI\" />
+    <None Remove="Persistence\Configurations\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Persistence\" />
     <Folder Include="Identity\" />
+    <Folder Include="OpenAI\" />
+    <Folder Include="Persistence\Configurations\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Cosmos" Version="8.0.2" />
@@ -26,6 +30,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MagellanGPT.Application\MagellanGPT.Application.csproj" />
+    <ProjectReference Include="..\MagellanGPT.Shared\MagellanGPT.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\SonarLint.xml">

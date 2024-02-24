@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MagellanGPT.API.Controllers;
 
 [ApiController]
+[Route("api/[controller]")]
 public abstract class ApiControllerBase : ControllerBase
 {
     private ISender? _mediator;

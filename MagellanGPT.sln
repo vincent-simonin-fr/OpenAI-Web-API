@@ -23,6 +23,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MagellanGPT.Shared", "src\MagellanGPT.Shared\MagellanGPT.Shared.csproj", "{1F78D81E-EC04-4FF9-9F68-B5E40281853E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +51,10 @@ Global
 		{3BB08424-BCB7-49F7-A425-FF0CCC658A94}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3BB08424-BCB7-49F7-A425-FF0CCC658A94}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3BB08424-BCB7-49F7-A425-FF0CCC658A94}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F78D81E-EC04-4FF9-9F68-B5E40281853E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F78D81E-EC04-4FF9-9F68-B5E40281853E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F78D81E-EC04-4FF9-9F68-B5E40281853E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F78D81E-EC04-4FF9-9F68-B5E40281853E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -62,5 +68,6 @@ Global
 		{271FBCCE-765F-4EA3-BF44-130A5FDF072C} = {2CA97F07-D72D-4504-97CD-6CE91BF21043}
 		{8D1C9E15-1A59-4855-816D-9E69547BA1E5} = {2CA97F07-D72D-4504-97CD-6CE91BF21043}
 		{3BB08424-BCB7-49F7-A425-FF0CCC658A94} = {28FA7E92-B6B2-42AA-B866-F1CE56387C8A}
+		{1F78D81E-EC04-4FF9-9F68-B5E40281853E} = {2CA97F07-D72D-4504-97CD-6CE91BF21043}
 	EndGlobalSection
 EndGlobal
