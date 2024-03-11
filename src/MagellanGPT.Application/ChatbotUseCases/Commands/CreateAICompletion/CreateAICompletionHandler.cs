@@ -12,10 +12,12 @@ public record CreateAICompletion : IRequest<IAsyncEnumerable<StreamingChatComple
 public class CreateAICompletionHandler : IRequestHandler<CreateAICompletion, IAsyncEnumerable<StreamingChatCompletionsUpdate>>
 {
     private readonly IOpenAIService _openAIService;
+    private readonly IApplicationDbContext _context;
 
-    public CreateAICompletionHandler(IOpenAIService openAIService)
+    public CreateAICompletionHandler(IOpenAIService openAIService, IApplicationDbContext context)
     {
         _openAIService = openAIService;
+        _context = context;
     }
 
     public async Task<IAsyncEnumerable<StreamingChatCompletionsUpdate>> Handle(CreateAICompletion request, CancellationToken cancellationToken)

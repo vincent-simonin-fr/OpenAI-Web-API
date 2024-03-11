@@ -27,9 +27,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="Services\" />
+    <None Remove="Files\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Services\" />
+    <Folder Include="Files\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\SonarLint.xml">

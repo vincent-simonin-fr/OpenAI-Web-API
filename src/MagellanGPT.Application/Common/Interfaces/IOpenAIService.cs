@@ -4,7 +4,7 @@ namespace MagellanGPT.Application.Common.Interfaces;
 
 public interface IOpenAIService
 {
-    Task<IAsyncEnumerable<StreamingChatCompletionsUpdate>> ProcessDemand(string question);
+    Task<IAsyncEnumerable<StreamingChatCompletionsUpdate>> ProcessDemand(string question, string? deploymentName = null);
     Task<string> ProcessDemandSynchronously(string question);
 }
 

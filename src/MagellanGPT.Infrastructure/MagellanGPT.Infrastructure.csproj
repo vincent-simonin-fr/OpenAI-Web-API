@@ -11,12 +11,16 @@
     <None Remove="Identity\" />
     <None Remove="OpenAI\" />
     <None Remove="Persistence\Configurations\" />
+    <None Remove="KeyVault\" />
+    <None Remove="Constants\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Persistence\" />
     <Folder Include="Identity\" />
     <Folder Include="OpenAI\" />
     <Folder Include="Persistence\Configurations\" />
+    <Folder Include="KeyVault\" />
+    <Folder Include="Constants\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Cosmos" Version="8.0.2" />
@@ -27,6 +31,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.6.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MagellanGPT.Application\MagellanGPT.Application.csproj" />
