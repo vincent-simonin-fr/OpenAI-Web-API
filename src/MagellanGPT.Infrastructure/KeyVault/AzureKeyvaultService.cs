@@ -8,16 +8,14 @@ namespace MagellanGPT.Infrastructure.KeyVault;
 public class AzureKeyvaultService : IAzureKeyvaultService
 {
     private readonly SecretClient _secretClient;
-    // private readonly IConfiguration _configuration;
 
     public AzureKeyvaultService(IConfiguration configuration)
     {
-        // _configuration = configuration;
         var keyvaultUri = configuration["KeyVault:Uri"]!;
         var tenantId = configuration["KeyVault:TenantId"];
         var clientId = configuration["KeyVault:ClientId"];
-        var secret = configuration["KeyVault:ClientSecret"];
-        var credentials = new ClientSecretCredential(tenantId: tenantId, clientId: clientId, clientSecret: secret);
+        var clientSecret = configuration["KeyVault:ClientSecret"];
+        var credentials = new ClientSecretCredential(tenantId: tenantId, clientId: clientId, clientSecret: clientSecret);
         _secretClient = new SecretClient(new Uri(keyvaultUri), credentials);
     }
 

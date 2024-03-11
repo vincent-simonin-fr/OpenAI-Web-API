@@ -30,6 +30,8 @@ public static class DependencyInjection
 
         services.AddScoped<IOpenAIService, OpenAIService>();
 
+        services.AddScoped<IAzureAiSearchService, AzureAiSearchService>();
+
         services.AddScoped<IAzureKeyvaultService, AzureKeyvaultService>();
 
         return services;

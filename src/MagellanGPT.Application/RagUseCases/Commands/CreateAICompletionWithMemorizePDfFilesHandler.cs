@@ -1,9 +1,12 @@
-﻿using Azure.AI.OpenAI;
+﻿using System.Text;
+using Azure.AI.OpenAI;
 using MagellanGPT.Application.Common.Interfaces;
-using MagellanGPT.Application.Common.Models;
 using MediatR;
+using Microsoft.Extensions.Primitives;
 using Microsoft.KernelMemory.DataFormats;
-using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Connectors.AzureAISearch;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Microsoft.SemanticKernel.Memory;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
@@ -19,64 +22,67 @@ public record CreateAICompletionWithMemorizePDfFiles : IRequest<IAsyncEnumerable
 public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<CreateAICompletionWithMemorizePDfFiles, IAsyncEnumerable<StreamingChatCompletionsUpdate>>
 {
     private readonly IOpenAIService _openAIService;
-    // TODO : Refactor
-    private readonly IKernelBuilder _kernelBuilder;
+    private readonly IAzureAiSearchService _azureAiSearchService;
 
-    public CreateAICompletionWithMemorizePDfFilesHandler(IOpenAIService openAIService)
+    public CreateAICompletionWithMemorizePDfFilesHandler(IOpenAIService openAIService, IAzureAiSearchService azureAiSearchService)
     {
         _openAIService = openAIService;
-        _kernelBuilder = Kernel.CreateBuilder();
+        _azureAiSearchService = azureAiSearchService;
     }
 
     /// <summary>
     /// ExtractContent from PDF https://github.com/microsoft/kernel-memory/blob/main/examples/205-dotnet-extract-text-from-docs/Program.cs
-    /// Memory & GetEmbedding https://github.com/microsoft/semantic-kernel/blob/main/dotnet/notebooks/06-memory-and-embeddings.ipynb
-    /// && https://devblogs.microsoft.com/semantic-kernel/semantic-kernel-planner-improvements-with-embeddings-and-semantic-memory/
     /// </summary>
     /// <param name="request"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     public async Task<IAsyncEnumerable<StreamingChatCompletionsUpdate>> Handle(CreateAICompletionWithMemorizePDfFiles request, CancellationToken cancellationToken)
     {
-        // TODO : Refactor
-        //var memoryWithACS = new MemoryBuilder()
-        //    .WithOpenAITextEmbeddingGeneration("text-embedding-ada-002", "TestConfiguration.OpenAI.ApiKey")
-        //    .WithMemoryStore(new AzureAISearchMemoryStore("TestConfiguration.AzureAISearch.Endpoint", "TestConfiguration.AzureAISearch.ApiKey"))
-        //    .Build();
-
         // Process PDF files
         FileContent content = new();
-        
-        request.FilePathList.ForEach(file => {
+        StringBuilder document = new();
+
+        var index = 1;
+        request.FilePathList.ForEach(async file => {
             content = new PdfDecoder().ExtractContent(file);
+            document.Append($"Document N°{index}");
             foreach (FileSection section in content.Sections)
             {
                 Console.WriteLine($"Page: {section.Number}/{content.Sections.Count}");
                 Console.WriteLine(section.Content);
                 Console.WriteLine("-----");
+                document.Append($"Page: {section.Number}/{content.Sections.Count}");
+                document.Append(section.Content);
+                document.Append("-----");
             }
+            await _azureAiSearchService.StoreAsync(new Dictionary<string, string> { { $"Document N°{index}", document.ToString() } });
+            index++;
         });
 
-        var response = await _openAIService.ProcessDemand(request.Demand);
+        
+
+        var response = await _openAIService.ProcessDemandWithRag(request.Demand, document.ToString());
 
         return response;
     }
 }
 
-// TODO : Refactor
+// TODO : Refactor & manage failure
 // https://github1s.com/microsoft/kernel-memory/blob/main/service/Core/DataFormats/Pdf/PdfDecoder.cs#L7-L8
 public class PdfDecoder
 {
     public FileContent ExtractContent(string filename)
     {
         using var stream = File.OpenRead(filename);
-        return this.ExtractContent(stream);
+        var content = ExtractContent(stream);
+        File.Delete(filename);
+        return content;
     }
 
     public FileContent ExtractContent(BinaryData data)
     {
         using var stream = data.ToStream();
-        return this.ExtractContent(stream);
+        return ExtractContent(stream);
     }
 
     public FileContent ExtractContent(Stream data)

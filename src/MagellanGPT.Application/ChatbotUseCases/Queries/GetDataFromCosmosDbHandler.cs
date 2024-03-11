@@ -2,6 +2,7 @@
 using System.Text.Json;
 using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Application.Common.Models;
+using MagellanGPT.Domain.Entities;
 using MediatR;
 
 namespace MagellanGPT.Application.ChatbotUseCases.Queries;
@@ -20,14 +21,17 @@ public class GetDataFromCosmosDbHandler : IRequestHandler<GetDataFromCosmosDb, I
     public async Task<IEnumerable<ConversationDTO>> Handle(GetDataFromCosmosDb request, CancellationToken cancellationToken)
     {
         var conversation = _context.Conversations.AsQueryable();
-        var dynamicObject = JsonSerializer.Deserialize<dynamic>(conversation.First().Answer)!;
-
-        var test = UsingJsonElement(conversation.First().Answer);
 
         return conversation.Select(ConversationDTO.Projection).ToList();
     }
 
     // TODO : Pour étude parser à refactoriser
+    /// <summary>
+    /// var dynamicObject = JsonSerializer.Deserialize<dynamic>(conversation.First().ConversationId)!;
+    /// var test = UsingJsonElement(conversation.First().ConversationId);
+    /// </summary>
+    /// <param name="jsonString"></param>
+    /// <returns></returns>
     public static (string? Genre, int Imdb, double Rotten) UsingJsonElement(string jsonString)
     {
         var jsonElement = JsonSerializer.Deserialize<JsonElement>(jsonString);
