@@ -1,6 +1,4 @@
 ﻿using MagellanGPT.API;
-using MagellanGPT.Infrastructure.Persistence;
-using MagellanGPT.Shared.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +11,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddAPIServices();
+
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 

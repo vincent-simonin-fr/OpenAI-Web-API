@@ -1,5 +1,6 @@
 ﻿using MagellanGPT.Application.ChatbotUseCases.Commands.CreateAICompletion;
 using MagellanGPT.Application.ChatbotUseCases.Queries;
+using MagellanGPT.Application.ChatbotUseCasesCommands;
 using MagellanGPT.Application.Common.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,6 +8,13 @@ namespace MagellanGPT.API.Controllers;
 
 public class ChatController : ApiControllerBase
 {
+    private readonly ILogger<ChatController> _logger;
+
+    public ChatController(ILogger<ChatController> logger)
+    {
+        _logger = logger;
+    }
+
     // GET: api/values
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ConversationDTO>>> Get()
@@ -16,10 +24,10 @@ public class ChatController : ApiControllerBase
 
     // POST api/values
     [HttpPost]
-    public async IAsyncEnumerable<string> Post([FromBody]string answer)
+    public async IAsyncEnumerable<string> Post([FromBody]string question)
     {
         Response.ContentType = "text/plain";
-        var completions = await Mediator.Send(new CreateAICompletion { Demand = answer });
+        var completions = await Mediator.Send(new CreateAICompletion { Demand = question });
 
         //using (StreamReader reader = new StreamReader(choices))
         //{
@@ -35,6 +43,16 @@ public class ChatController : ApiControllerBase
                 yield return completion.ContentUpdate;
             }
         }
+    }
+
+    [HttpPost]
+    [Route("synchro")]
+    public async Task<ActionResult<string>> PostSynchrone([FromBody] string question)
+    {
+        Response.ContentType = "text/plain";
+        var completions = await Mediator.Send(new CreateAICompletionSynchronously { Demand = question });
+
+        return completions;
     }
 }
 

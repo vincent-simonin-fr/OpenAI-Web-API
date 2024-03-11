@@ -1,10 +1,8 @@
 ﻿
 using System.Reflection;
-using System.Reflection.Emit;
 using MagellanGPT.Application.Common.Interfaces;
-using MagellanGPT.Shared.Constants;
+using MagellanGPT.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic;
 
 namespace MagellanGPT.Infrastructure.Persistence;
 

@@ -1,4 +1,5 @@
 ﻿using MagellanGPT.Application.Common.Interfaces;
+using MagellanGPT.Infrastructure.KeyVault;
 using MagellanGPT.Infrastructure.OpenAI;
 using MagellanGPT.Infrastructure.Persistence;
 using Microsoft.Azure.Cosmos;
@@ -19,7 +20,7 @@ public static class DependencyInjection
             options.UseCosmos(accountEndPoint, accountKey, dbName, options =>
             {
                 // https://github.com/dotnet/EntityFramework.Docs/blob/main/samples/core/Cosmos/ModelBuilding
-                options.ConnectionMode(ConnectionMode.Direct);
+                options.ConnectionMode(ConnectionMode.Gateway);
             }
             ));
 
@@ -28,6 +29,8 @@ public static class DependencyInjection
         services.AddScoped<ApplicationDbContextInitialiser>();
 
         services.AddScoped<IOpenAIService, OpenAIService>();
+
+        services.AddScoped<IAzureKeyvaultService, AzureKeyvaultService>();
 
         return services;
     }

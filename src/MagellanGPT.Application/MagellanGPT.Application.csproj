@@ -17,9 +17,9 @@
     <None Remove="ChatbotUseCases\Queries\" />
     <None Remove="ChatbotUseCases\Commands\" />
     <None Remove="ChatbotUseCases\Commands\CreateAICompletion\" />
-    <None Remove="RAGUseCases\" />
-    <None Remove="RAGUseCases\Commands\" />
-    <None Remove="RAGUseCases\Queries\" />
+    <None Remove="RagUseCases\Commands\" />
+    <None Remove="RagUseCases\Queries\" />
+    <None Remove="RagUseCases\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\" />
@@ -32,9 +32,9 @@
     <Folder Include="ChatbotUseCases\Queries\" />
     <Folder Include="ChatbotUseCases\Commands\" />
     <Folder Include="ChatbotUseCases\Commands\CreateAICompletion\" />
-    <Folder Include="RAGUseCases\" />
-    <Folder Include="RAGUseCases\Commands\" />
-    <Folder Include="RAGUseCases\Queries\" />
+    <Folder Include="RagUseCases\Commands\" />
+    <Folder Include="RagUseCases\Queries\" />
+    <Folder Include="RagUseCases\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MagellanGPT.Domain\MagellanGPT.Domain.csproj" />
@@ -48,6 +48,10 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.2" />
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.4.0" />
+    <PackageReference Include="Microsoft.KernelMemory.DataFormats.AzureAIDocIntel" Version="0.32.240307.3" />
+    <PackageReference Include="UglyToad.PdfPig" Version="1.7.0-custom-5" />
+    <PackageReference Include="UglyToad.PdfPig.DocumentLayoutAnalysis" Version="1.7.0-custom-5" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureAISearch" Version="1.4.0-alpha" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\SonarLint.xml">
