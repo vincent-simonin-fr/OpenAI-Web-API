@@ -12,7 +12,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
-        var accountEndPoint = configuration.GetSection("CosmosDb:EndPoint").Value!;
+        var accountEndPoint = configuration.GetSection("CosmosDb:Endpoint").Value!;
         var accountKey = configuration.GetSection("CosmosDb:Key").Value!;
         var dbName = configuration.GetSection("CosmosDb:DbName").Value!;
 
