@@ -53,7 +53,7 @@ public class ApplicationDbContextInitialiser
     {
         // Container
         //using CosmosClient client = new CosmosClient(
-        //    accountEndpoint: _config.GetSection("CosmosDb:EndPoint").Value!,
+        //    accountEndpoint: _config.GetSection("CosmosDb:Endpoint").Value!,
         //    authKeyOrResourceToken: _config.GetSection("CosmosDb:Key").Value!);
 
         //var db = client.GetDatabase(CosmosDbConst.DbName);

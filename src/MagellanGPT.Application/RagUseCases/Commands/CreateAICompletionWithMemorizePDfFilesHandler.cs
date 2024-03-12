@@ -2,11 +2,7 @@
 using Azure.AI.OpenAI;
 using MagellanGPT.Application.Common.Interfaces;
 using MediatR;
-using Microsoft.Extensions.Primitives;
 using Microsoft.KernelMemory.DataFormats;
-using Microsoft.SemanticKernel.Connectors.AzureAISearch;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
-using Microsoft.SemanticKernel.Memory;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
