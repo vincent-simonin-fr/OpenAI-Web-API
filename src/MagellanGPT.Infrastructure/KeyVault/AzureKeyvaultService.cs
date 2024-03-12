@@ -15,7 +15,7 @@ public class AzureKeyvaultService : IAzureKeyvaultService
         var tenantId = configuration["KeyVault:TenantId"];
         var clientId = configuration["KeyVault:ClientId"];
         var clientSecret = configuration["KeyVault:ClientSecret"];
-        var credentials = new ClientSecretCredential(tenantId: tenantId, clientId: clientId, clientSecret: clientSecret);
+        var credentials = new ClientSecretCredential(tenantId, clientId, clientSecret);
         _secretClient = new SecretClient(new Uri(keyvaultUri), credentials);
     }
 

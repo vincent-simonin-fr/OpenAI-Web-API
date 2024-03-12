@@ -1,6 +1,7 @@
 ﻿using Azure;
 using Azure.AI.OpenAI;
 using MagellanGPT.Application.Common.Interfaces;
+using MagellanGPT.Infrastructure.KeyVault;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -18,26 +19,34 @@ namespace MagellanGPT.Infrastructure.OpenAI;
 /// </summary>
 public class AzureAiSearchService : IAzureAiSearchService
 {
-    private const string MemoryCollectionName = "SKGitHub";
+    private const string MemoryCollectionName = "SKOrganization";
+
 #pragma warning disable SKEXP0003
     private readonly ISemanticTextMemory _memory;
-    private readonly string _openAiEndpoint;
-    private readonly string _openAiKey;
+
+    private readonly OpenAIClient _openAIClient;
+#pragma warning disable SKEXP0021
+    private readonly AzureAISearchMemoryStore _azureAISearchMemoryStore;
 
     public AzureAiSearchService(IConfiguration configuration)
     {
-        _openAiEndpoint = configuration.GetSection("OpenAi:Endpoint").Value!;
-        _openAiKey = configuration.GetSection("OpenAi:Key").Value!;
+        var openAiEndpoint = configuration.GetSection("OpenAi:Endpoint").Value!;
+        var openAiKey = SecretManager.GetInstance().OpenAiKey;
         var aiSearchEndpoint = configuration.GetSection("AiSearch:Endpoint").Value!;
-        var aiSearchKey = configuration.GetSection("AiSearch:Key").Value!;
+        var aiSearchKey = SecretManager.GetInstance().AiSearchKey;
 
 #pragma warning disable SKEXP0003
 #pragma warning disable SKEXP0011
 #pragma warning disable SKEXP0021
         _memory = new MemoryBuilder()
-            .WithAzureOpenAITextEmbeddingGeneration("text-embedding-ada-002", _openAiEndpoint, _openAiKey)
+            .WithAzureOpenAITextEmbeddingGeneration("text-embedding-ada-002", openAiEndpoint, openAiKey)
             .WithMemoryStore(new AzureAISearchMemoryStore(aiSearchEndpoint, aiSearchKey))
             .Build();
+
+        AzureKeyCredential credentials = new(openAiKey);
+        _openAIClient = new(new Uri(openAiEndpoint), credentials);
+
+        _azureAISearchMemoryStore = new AzureAISearchMemoryStore(aiSearchEndpoint, aiSearchKey);
     }
 
     public async Task StoreAsync(Dictionary<string, string> documents)
@@ -45,12 +54,14 @@ public class AzureAiSearchService : IAzureAiSearchService
 
         foreach (var doc in documents)
         {
-            var docId = await _memory.SaveReferenceAsync(
-                collection: MemoryCollectionName,
-                externalSourceName: "Organization",
-                externalId: doc.Key,
-                description: doc.Value,
-                text: doc.Value);
+            //var docId = await _memory.SaveReferenceAsync(
+            //    collection: MemoryCollectionName,
+            //    externalSourceName: "Organization",
+            //    externalId: doc.Key,
+            //    description: doc.Value,
+            //    text: doc.Value);
+
+            StoreMemoryRecordAsync(doc.Key, doc.Value);
         }
     }
 
@@ -76,7 +87,7 @@ public class AzureAiSearchService : IAzureAiSearchService
         Console.WriteLine("----------------------");
     }
 
-    public async Task<float[]> GetEmbeddings(string document)
+    public async Task<ReadOnlyMemory<float>> GetEmbeddingsAsync(string document)
     {
         EmbeddingsOptions embeddingOptions = new()
         {
@@ -84,14 +95,11 @@ public class AzureAiSearchService : IAzureAiSearchService
             Input = { document },
         };
 
-        AzureKeyCredential credentials = new(_openAiKey);
-        OpenAIClient openAIClient = new(new Uri(_openAiEndpoint), credentials);
-
-        var returnValue = await openAIClient.GetEmbeddingsAsync(embeddingOptions);
+        var returnValue = await _openAIClient.GetEmbeddingsAsync(embeddingOptions);
 
         var requestTokens = returnValue.Value.Usage.PromptTokens;
         var totalTokens = returnValue.Value.Usage.TotalTokens;
-        var embeddingArray = returnValue.Value.Data[0].Embedding.ToArray();
+        var embeddingArray = returnValue.Value.Data[0].Embedding;
 
         foreach (float item in returnValue.Value.Data[0].Embedding.ToArray())
         {
@@ -99,6 +107,17 @@ public class AzureAiSearchService : IAzureAiSearchService
         }
 
         return embeddingArray;
+    }
+
+    public async void StoreMemoryRecordAsync(string documentKey, string documentValue)
+    {
+        var embedding = await GetEmbeddingsAsync(documentValue);
+
+        var MemoryRecordMetadata = new MemoryRecordMetadata(true, Guid.NewGuid().ToString(), documentKey, documentValue, string.Empty, string.Empty);
+
+        var memoryRecord = new MemoryRecord(MemoryRecordMetadata, embedding, documentKey, DateTimeOffset.UtcNow);
+
+        await _azureAISearchMemoryStore.UpsertAsync(MemoryCollectionName, memoryRecord);
     }
 }
 

@@ -1,4 +1,5 @@
 ﻿using MagellanGPT.Application.Common.Interfaces;
+using MagellanGPT.Infrastructure.Constant;
 using MagellanGPT.Infrastructure.KeyVault;
 using MagellanGPT.Infrastructure.OpenAI;
 using MagellanGPT.Infrastructure.Persistence;
@@ -12,8 +13,12 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
-        var accountEndPoint = configuration.GetSection("CosmosDb:Endpoint").Value!;
-        var accountKey = configuration.GetSection("CosmosDb:Key").Value!;
+        services.AddScoped<IAzureKeyvaultService, AzureKeyvaultService>();
+
+        InitSecretManager(configuration);
+
+        var accountEndPoint = configuration.GetSection("CosmosDb:EndPoint").Value!;
+        var accountKey = SecretManager.GetInstance().CosmosDbKey;
         var dbName = configuration.GetSection("CosmosDb:DbName").Value!;
 
         services.AddDbContext<ApplicationDbContext>(options =>
@@ -32,9 +37,18 @@ public static class DependencyInjection
 
         services.AddScoped<IAzureAiSearchService, AzureAiSearchService>();
 
-        services.AddScoped<IAzureKeyvaultService, AzureKeyvaultService>();
-
         return services;
+    }
+
+    private static void InitSecretManager(IConfiguration configuration)
+    {
+        var azureKeyvaultService = new AzureKeyvaultService(configuration);
+
+        SecretManager secretManager = SecretManager.GetInstance();
+
+        secretManager.OpenAiKey = azureKeyvaultService.GetSecret(ConfigurationConstants.DevOpenAiKey);
+        secretManager.AiSearchKey = azureKeyvaultService.GetSecret(ConfigurationConstants.DevAiSearchKey);
+        secretManager.CosmosDbKey = azureKeyvaultService.GetSecret(ConfigurationConstants.DevCosmosDbKey);
     }
 }
 
