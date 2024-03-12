@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>1ab50f9e-fa06-4df5-bf81-d74211c214fd</UserSecretsId>
+    <UserSecretsId>dad073c0-ebe9-4b66-96c6-f7830fe7da3d</UserSecretsId>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'https' " />

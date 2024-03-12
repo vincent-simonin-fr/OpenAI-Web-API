@@ -15,10 +15,11 @@ public class LoggingBehaviour<TRequest> : IRequestPreProcessor<TRequest> where T
     public async Task Process(TRequest request, CancellationToken cancellationToken)
     {
         var requestName = typeof(TRequest).Name;
+        var userId = string.Empty;
         string? userName = string.Empty;
 
         _logger.LogInformation("MagellanGPT Request: {Name} {@UserId} {@UserName} {@Request}",
-            requestName, userName, request);
+            requestName, userId, userName, request);
     }
 }
 

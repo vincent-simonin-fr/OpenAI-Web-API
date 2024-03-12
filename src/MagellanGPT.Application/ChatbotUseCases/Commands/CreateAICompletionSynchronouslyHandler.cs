@@ -1,5 +1,4 @@
-﻿using Azure.AI.OpenAI;
-using MagellanGPT.Application.Common.Interfaces;
+﻿using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Domain.Entities;
 using MediatR;
 
@@ -23,8 +22,7 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
 
     public async Task<string> Handle(CreateAICompletionSynchronously request, CancellationToken cancellationToken)
     {
-        var existingConversation = _context.Conversations.FirstOrDefault(c => c.Id == "12" && c.ConversationId == "243e4e8e-af44-4548-8027-ac872bfc81bb");
-
+        var existingConversation = _context.Conversations.FirstOrDefault(c => c.Id == "13" && c.ConversationId == "759f368c-c14c-49eb-8770-69881e15367f");
         var response = _openAIService.ProcessDemandSynchronously(request.Demand).Result;
 
         if (existingConversation is not null)
@@ -42,10 +40,10 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
         {
             var conversation = new Conversation
             {
-                Id = "12",
+                Id = "13",
                 ConversationId = Guid.NewGuid().ToString(),
                 LlmDeploymentName = "ChatGPT35Turbo",
-                Title = "",
+                Title = "Test",
                 Dialogs = new List<Dialog> { new Dialog
                     {
                         Question = request.Demand,

@@ -17,7 +17,6 @@
     <None Remove="ChatbotUseCases\Queries\" />
     <None Remove="ChatbotUseCases\Commands\" />
     <None Remove="ChatbotUseCases\Commands\CreateAICompletion\" />
-    <None Remove="RagUseCases\Commands\" />
     <None Remove="RagUseCases\Queries\" />
     <None Remove="RagUseCases\" />
   </ItemGroup>
@@ -32,7 +31,6 @@
     <Folder Include="ChatbotUseCases\Queries\" />
     <Folder Include="ChatbotUseCases\Commands\" />
     <Folder Include="ChatbotUseCases\Commands\CreateAICompletion\" />
-    <Folder Include="RagUseCases\Commands\" />
     <Folder Include="RagUseCases\Queries\" />
     <Folder Include="RagUseCases\" />
   </ItemGroup>
