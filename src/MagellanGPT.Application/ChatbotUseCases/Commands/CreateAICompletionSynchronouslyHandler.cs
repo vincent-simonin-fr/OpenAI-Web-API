@@ -1,15 +1,16 @@
 ﻿using MagellanGPT.Application.Common.Interfaces;
+using MagellanGPT.Application.Common.Models;
 using MagellanGPT.Domain.Entities;
 using MediatR;
 
 namespace MagellanGPT.Application.ChatbotUseCasesCommands;
 
-public record CreateAICompletionSynchronously : IRequest<string>
+public record CreateAICompletionSynchronously : IRequest<ResponseDto>
 {
     public string Demand { get; set; }
 }
 
-public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICompletionSynchronously, string>
+public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICompletionSynchronously, ResponseDto>
 {
     private readonly IOpenAIService _openAIService;
     private readonly IApplicationDbContext _context;
@@ -20,22 +21,29 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
         _context = context;
     }
 
-    public async Task<string> Handle(CreateAICompletionSynchronously request, CancellationToken cancellationToken)
+    public async Task<ResponseDto> Handle(CreateAICompletionSynchronously request, CancellationToken cancellationToken)
     {
         var existingConversation = _context.Conversations.FirstOrDefault(c => c.Id == "13" && c.ConversationId == "759f368c-c14c-49eb-8770-69881e15367f");
-        (string Text, int TotalTokens, int RequestTokens, int ResponseTokens) response = _openAIService.ProcessDemandSynchronously(request.Demand).Result;
+        (string Text, int TotalTokens, int RequestTokens, int ResponseTokens) response = await _openAIService.ProcessDemandSynchronously(request.Demand);
 
-        await StoreDialog(existingConversation, request.Demand, response, cancellationToken);
+        var conversation = await StoreDialog(existingConversation, request.Demand, response, cancellationToken);
 
-        return response.Text;
+        var dialog = conversation.Dialogs.Last();
+
+        var dialogTokenCost = dialog.TokensRequest + dialog.TokensResponse + dialog.TokensDocumentProcessing;
+
+        return new ResponseDto { Id = conversation.Id, ConversationId = conversation.ConversationId, Answer = dialog.Answer, Tokens = (int)dialogTokenCost };
     }
 
-    private async Task StoreDialog(Conversation? existingConversation, string demand, (string Text, int TotalTokens, int RequestTokens, int ResponseTokens) response, CancellationToken cancellationToken)
+    private async Task<Conversation> StoreDialog(Conversation? existingConversation, string demand, (string Text, int TotalTokens, int RequestTokens, int ResponseTokens) response, CancellationToken cancellationToken)
     {
+        Conversation conversation;
+
         if (existingConversation is not null)
         {
-            existingConversation.Tokens += response.TotalTokens;
-            existingConversation.Dialogs.Add(new Dialog
+            conversation = existingConversation;
+            conversation.Tokens += response.TotalTokens;
+            conversation.Dialogs.Add(new Dialog
             {
                 Question = demand,
                 Answer = response.Text,
@@ -47,7 +55,7 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
         }
         else
         {
-            var conversation = new Conversation
+            conversation = new Conversation
             {
                 Id = "13",
                 ConversationId = Guid.NewGuid().ToString(),
@@ -69,5 +77,7 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
         }
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        return conversation;
     }
 }
