@@ -406,3 +406,8 @@ ASALocalRun/
 
 # Files
 src/*/Files/
+
+# SonarQube
+.sonarqube
+
+.VSCodeCounter
