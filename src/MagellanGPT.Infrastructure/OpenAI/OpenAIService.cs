@@ -1,6 +1,7 @@
 ﻿using Azure;
 using Azure.AI.OpenAI;
 using MagellanGPT.Application.Common.Interfaces;
+using MagellanGPT.Domain.Entities;
 using MagellanGPT.Infrastructure.KeyVault;
 using Microsoft.Extensions.Configuration;
 
@@ -81,18 +82,35 @@ public class OpenAIService : IOpenAIService
     }
 
     // TODO: Remove if not used
-    public async Task<(string Text, int TotalTokens, int RequestTokens, int ResponseTokens)> ProcessDemandSynchronously(string question)
+    public async Task<(string Text, int TotalTokens, int RequestTokens, int ResponseTokens)> ProcessDemandSynchronously(Conversation conversation)
     {
+        List<ChatRequestMessage> messages = new List<ChatRequestMessage>() {
+                new ChatRequestSystemMessage(@"Tu es un assistant IA expert."),
+            };
+
+        conversation.Dialogs.ForEach(dialog =>
+        {
+            if(dialog.Answer is not null)
+            {
+                messages.Add(new ChatRequestUserMessage(dialog.Question));
+                messages.Add(new ChatRequestUserMessage(dialog.Answer));
+            }
+        });
+
+        var question = conversation.Dialogs[^1].Question;
+
+        messages.Add(new ChatRequestUserMessage(question));
+
         ChatCompletions responseWithoutStream = await _client.GetChatCompletionsAsync(
         new ChatCompletionsOptions()
         {
             DeploymentName = _deploymentName,
             Messages =
             {
-                new ChatRequestSystemMessage(@"Tu es un assistant IA expert,"),
+                new ChatRequestSystemMessage(@"Tu es un assistant IA expert."),
                 new ChatRequestUserMessage(question),
             },
-            Temperature = 1,
+            Temperature = 0.5f,
             MaxTokens = 800,
             FrequencyPenalty = 0,
             PresencePenalty = 0,
@@ -146,7 +164,6 @@ public class OpenAIService : IOpenAIService
 
         var returnValue = await _client.GetEmbeddingsAsync(embeddingOptions);
 
-        var promptTokens = returnValue.Value.Usage.PromptTokens;
         var totalTokens = returnValue.Value.Usage.TotalTokens;
         var embeddingArray = returnValue.Value.Data[0].Embedding;
 
