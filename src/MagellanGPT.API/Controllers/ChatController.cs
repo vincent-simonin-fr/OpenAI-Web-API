@@ -53,7 +53,6 @@ public class ChatController : ApiControllerBase
     // [Route("synchro")]
     public async Task<ActionResult<ResponseDto>> PostSynchrone([FromBody] string question)
     {
-        Response.ContentType = "text/plain";
         var completions = await Mediator.Send(new CreateAICompletionSynchronously { Demand = question });
 
         return completions;
