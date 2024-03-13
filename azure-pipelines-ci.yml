@@ -1,0 +1,65 @@
+trigger:
+- dev
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  buildConfiguration: 'Release'
+  projectName: 'MagellanGPT' # 
+  
+stages:
+- stage: Build
+  displayName: 'Build and Test'
+  jobs:
+  - job: Build
+    displayName: 'Build'
+    steps:
+    - task: UseDotNet@2
+      displayName: 'Use .NET Core SDK'
+      inputs:
+        version: '8.x'
+        includePreviewVersions: true
+    
+    - script: dotnet build --configuration $(buildConfiguration)
+      displayName: 'dotnet build'
+
+    - script: dotnet publish --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/$(projectName)
+      displayName: 'dotnet publish'
+
+    - task: ArchiveFiles@2
+      displayName: 'Archive files'
+      inputs:
+        rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/$(projectName)'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/$(projectName).zip'
+        replaceExistingArchive: true
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/$(projectName).zip'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'
+
+- stage: Deploy
+  displayName: 'Deploy to Dev'
+  condition: succeeded()
+  dependsOn: Build
+  jobs:
+  - deployment: DeployWebApp
+    displayName: 'Deploy Web Application'
+    environment: 'Dev'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureRmWebAppDeployment@4
+            inputs:
+              ConnectionType: 'AzureRM'
+              azureSubscription: 'Abonnements 5 (1d11e16a-72e1-45fa-a0c5-45cde2acb3f9)'
+              appType: 'webAppLinux'
+              WebAppName: 'webappmagellangpt1'
+              packageForLinux: '$(Pipeline.Workspace)/drop/$(projectName).zip' # Assurez-vous que ce chemin correspond à l'artéfact publié
+              RuntimeStack: 'DOTNETCORE|8.0'
