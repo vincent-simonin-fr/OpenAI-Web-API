@@ -2,6 +2,6 @@
 
 public interface IAzureAiSearchService
 {
-    Task StoreAsync(Dictionary<string, string> documents);
+    Task<int> StoreAsync(Dictionary<string, string> documents);
     Task SearchMemoryAsync(string query);
 }

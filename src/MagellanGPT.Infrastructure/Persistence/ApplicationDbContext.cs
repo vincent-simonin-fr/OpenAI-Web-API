@@ -1,5 +1,4 @@
-﻿
-using System.Reflection;
+﻿using System.Reflection;
 using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Domain.Entities;
 using Microsoft.EntityFrameworkCore;

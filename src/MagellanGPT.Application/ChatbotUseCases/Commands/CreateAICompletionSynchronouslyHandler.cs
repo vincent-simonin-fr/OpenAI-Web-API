@@ -23,16 +23,25 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
     public async Task<string> Handle(CreateAICompletionSynchronously request, CancellationToken cancellationToken)
     {
         var existingConversation = _context.Conversations.FirstOrDefault(c => c.Id == "13" && c.ConversationId == "759f368c-c14c-49eb-8770-69881e15367f");
-        var response = _openAIService.ProcessDemandSynchronously(request.Demand).Result;
+        (string Text, int TotalTokens, int RequestTokens, int ResponseTokens) response = _openAIService.ProcessDemandSynchronously(request.Demand).Result;
 
+        await StoreDialog(existingConversation, request.Demand, response, cancellationToken);
+
+        return response.Text;
+    }
+
+    private async Task StoreDialog(Conversation? existingConversation, string demand, (string Text, int TotalTokens, int RequestTokens, int ResponseTokens) response, CancellationToken cancellationToken)
+    {
         if (existingConversation is not null)
         {
+            existingConversation.Tokens += response.TotalTokens;
             existingConversation.Dialogs.Add(new Dialog
             {
-                Question = request.Demand,
-                Answer = response,
+                Question = demand,
+                Answer = response.Text,
                 DocumentId = null,
-                Token = 100,
+                TokensRequest = response.RequestTokens,
+                TokensResponse = response.ResponseTokens,
                 CreatedAt = DateTime.Now,
             });
         }
@@ -45,21 +54,20 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
                 LlmDeploymentName = "ChatGPT35Turbo",
                 Title = "Test",
                 Dialogs = new List<Dialog> { new Dialog
-                    {
-                        Question = request.Demand,
-                        Answer = response,
+                {
+                        Question = demand,
+                        Answer = response.Text,
                         DocumentId = null,
-                        Token = 100,
+                        TokensRequest = response.RequestTokens,
+                        TokensResponse = response.ResponseTokens,
                         CreatedAt = DateTime.Now,
                     }
-                }
+                },
+                Tokens = response.TotalTokens
             };
             _context.Conversations.Add(conversation);
         }
 
         await _context.SaveChangesAsync(cancellationToken);
-
-        return response;
     }
 }
-

@@ -7,9 +7,9 @@ using MediatR;
 
 namespace MagellanGPT.Application.ChatbotUseCases.Queries;
 
-public record GetDataFromCosmosDb : IRequest<IEnumerable<ConversationDTO>>;
+public record GetDataFromCosmosDb : IRequest<IEnumerable<ConversationDto>>;
 
-public class GetDataFromCosmosDbHandler : IRequestHandler<GetDataFromCosmosDb, IEnumerable<ConversationDTO>>
+public class GetDataFromCosmosDbHandler : IRequestHandler<GetDataFromCosmosDb, IEnumerable<ConversationDto>>
 {
     private readonly IApplicationDbContext _context;
 
@@ -18,11 +18,11 @@ public class GetDataFromCosmosDbHandler : IRequestHandler<GetDataFromCosmosDb, I
         _context = context;
     }
 
-    public async Task<IEnumerable<ConversationDTO>> Handle(GetDataFromCosmosDb request, CancellationToken cancellationToken)
+    public async Task<IEnumerable<ConversationDto>> Handle(GetDataFromCosmosDb request, CancellationToken cancellationToken)
     {
         var conversation = _context.Conversations.AsQueryable();
 
-        return conversation.Select(ConversationDTO.Projection).ToList();
+        return conversation.Select(ConversationDto.Projection).ToList();
     }
 
     // TODO : Pour étude parser à refactoriser

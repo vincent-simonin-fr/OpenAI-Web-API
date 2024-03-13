@@ -1,7 +1,4 @@
-﻿using MagellanGPT.Domain.Entities;
-using MagellanGPT.Shared.Constants;
-using Microsoft.Azure.Cosmos;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 

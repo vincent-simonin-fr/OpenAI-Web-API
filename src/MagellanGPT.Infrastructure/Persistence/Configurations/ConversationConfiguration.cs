@@ -1,6 +1,4 @@
-﻿
-using MagellanGPT.Application.Common.Interfaces;
-using MagellanGPT.Domain.Entities;
+﻿using MagellanGPT.Domain.Entities;
 using MagellanGPT.Shared.Constants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

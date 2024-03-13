@@ -1,6 +1,6 @@
 ﻿using System.Text;
-using Azure.AI.OpenAI;
 using MagellanGPT.Application.Common.Interfaces;
+using MagellanGPT.Domain.Entities;
 using MediatR;
 using Microsoft.KernelMemory.DataFormats;
 using UglyToad.PdfPig;
@@ -9,57 +9,128 @@ using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
 
 namespace MagellanGPT.Application.RAGUseCases.Commands;
 
-public record CreateAICompletionWithMemorizePDfFiles : IRequest<IAsyncEnumerable<StreamingChatCompletionsUpdate>>
+public record CreateAICompletionWithMemorizePDfFiles : IRequest<string>
 {
     public required List<string> FilePathList { get; set; }
     public string Demand { get; set; }
 };
 
-public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<CreateAICompletionWithMemorizePDfFiles, IAsyncEnumerable<StreamingChatCompletionsUpdate>>
+public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<CreateAICompletionWithMemorizePDfFiles, string>
 {
     private readonly IOpenAIService _openAIService;
     private readonly IAzureAiSearchService _azureAiSearchService;
+    private readonly IApplicationDbContext _context;
 
-    public CreateAICompletionWithMemorizePDfFilesHandler(IOpenAIService openAIService, IAzureAiSearchService azureAiSearchService)
+    public CreateAICompletionWithMemorizePDfFilesHandler(IApplicationDbContext context, IOpenAIService openAIService, IAzureAiSearchService azureAiSearchService)
     {
+        _context = context;
         _openAIService = openAIService;
         _azureAiSearchService = azureAiSearchService;
     }
 
     /// <summary>
     /// ExtractContent from PDF https://github.com/microsoft/kernel-memory/blob/main/examples/205-dotnet-extract-text-from-docs/Program.cs
+    /// https://stackoverflow.com/questions/77261548/how-to-appropriately-use-the-azure-ai-openai-openaiclient-getchatcompletionsstre
     /// </summary>
     /// <param name="request"></param>
     /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    public async Task<IAsyncEnumerable<StreamingChatCompletionsUpdate>> Handle(CreateAICompletionWithMemorizePDfFiles request, CancellationToken cancellationToken)
+    /// <returns>Task<IAsyncEnumerable<StreamingChatCompletionsUpdate>></returns>
+    public async Task<string> Handle(CreateAICompletionWithMemorizePDfFiles request, CancellationToken cancellationToken)
     {
-        // Process PDF files
+        // S'agit il d'une conversation existante
+        var existingConversation = _context.Conversations.FirstOrDefault(c => c.Id == "13" && c.ConversationId == "759f368c-c14c-49eb-8770-69881e15367f");
+
+        // Traitement des PDF
+        var documentsProcessing = await ProcessAndStorePdf(request.FilePathList);
+        var documentsIds = new List<string>();
+        StringBuilder document = new();
+        foreach(var doc in documentsProcessing.Documents)
+        {
+            document.Append(doc.Value);
+            documentsIds.Add(doc.Key);
+        }
+
+        // Requête de complétion de la demande
+        (string Text, int TotalTokens, int RequestTokens, int ResponseTokens) response = await _openAIService.ProcessDemandWithRagSynchronously(request.Demand, document.ToString());
+
+        // Persistence du dialogue en base de données
+        await StoreDialog(existingConversation, request.Demand, response, (documentsIds, documentsProcessing.TokenCost), cancellationToken);
+
+        return response.Text;
+    }
+
+    private async Task<(Dictionary<string, string> Documents, int TokenCost)> ProcessAndStorePdf(List<string> filePathList)
+    {
         FileContent content = new();
         StringBuilder document = new();
 
+        var documents = new Dictionary<string, string>();
+
         var index = 1;
-        request.FilePathList.ForEach(async file => {
+        filePathList.ForEach(file => {
             content = new PdfDecoder().ExtractContent(file);
             document.Append($"Document N°{index}");
             foreach (FileSection section in content.Sections)
             {
-                Console.WriteLine($"Page: {section.Number}/{content.Sections.Count}");
-                Console.WriteLine(section.Content);
-                Console.WriteLine("-----");
                 document.Append($"Page: {section.Number}/{content.Sections.Count}");
                 document.Append(section.Content);
                 document.Append("-----");
             }
-            await _azureAiSearchService.StoreAsync(new Dictionary<string, string> { { $"Document N°{index}", document.ToString() } });
+            documents.Add(Guid.NewGuid().ToString(), document.ToString());
             index++;
         });
+       
+        var tokenCost = await _azureAiSearchService.StoreAsync(documents);
 
-        
+        return (documents, tokenCost);
+    }
 
-        var response = await _openAIService.ProcessDemandWithRag(request.Demand, document.ToString());
+    private async Task StoreDialog(
+        Conversation? existingConversation,
+        string demand,
+        (string Text, int TotalTokens, int RequestTokens, int ResponseTokens) response,
+        (List<string> Ids, int TokenCost) documents,
+        CancellationToken cancellationToken)
+    {
+        if (existingConversation is not null)
+        {
+            existingConversation.Tokens += response.TotalTokens + documents.TokenCost;
+            existingConversation.Dialogs.Add(new Dialog
+            {
+                Question = demand,
+                Answer = response.Text,
+                DocumentId = documents.Ids,
+                TokensRequest = response.RequestTokens,
+                TokensResponse = response.ResponseTokens,
+                TokensDocumentProcessing = documents.TokenCost,
+                CreatedAt = DateTime.Now,
+            });
+        }
+        else
+        {
+            var conversation = new Conversation
+            {
+                Id = "13",
+                ConversationId = Guid.NewGuid().ToString(),
+                LlmDeploymentName = "ChatGPT35Turbo",
+                Title = "Test",
+                Dialogs = new List<Dialog> { new Dialog
+                {
+                        Question = demand,
+                        Answer = response.Text,
+                        DocumentId = documents.Ids,
+                        TokensRequest = response.RequestTokens,
+                        TokensResponse = response.ResponseTokens,
+                        TokensDocumentProcessing = documents.TokenCost,
+                        CreatedAt = DateTime.Now,
+                    }
+                },
+                Tokens = response.TotalTokens + documents.TokenCost
+            };
+            _context.Conversations.Add(conversation);
+        }
 
-        return response;
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }
 

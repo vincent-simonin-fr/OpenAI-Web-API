@@ -15,8 +15,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MagellanGPT.Domain", "src\M
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MagellanGPT.API", "src\MagellanGPT.API\MagellanGPT.API.csproj", "{8D1C9E15-1A59-4855-816D-9E69547BA1E5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MagellanGPT.UnitTests", "tests\MagellanGPT.UnitTests\MagellanGPT.UnitTests.csproj", "{3BB08424-BCB7-49F7-A425-FF0CCC658A94}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{13CBB239-053B-4F4C-B7D6-EFE017F2630A}"
 	ProjectSection(SolutionItems) = preProject
 		SonarLint.xml = SonarLint.xml
@@ -24,6 +22,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MagellanGPT.Shared", "src\MagellanGPT.Shared\MagellanGPT.Shared.csproj", "{1F78D81E-EC04-4FF9-9F68-B5E40281853E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MagelanGPT.Application.UnitTests", "tests\MagelanGPT.Application.UnitTests\MagelanGPT.Application.UnitTests.csproj", "{074A4C96-3603-4D7B-B011-C2B624493BA8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,14 +47,14 @@ Global
 		{8D1C9E15-1A59-4855-816D-9E69547BA1E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D1C9E15-1A59-4855-816D-9E69547BA1E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8D1C9E15-1A59-4855-816D-9E69547BA1E5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3BB08424-BCB7-49F7-A425-FF0CCC658A94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3BB08424-BCB7-49F7-A425-FF0CCC658A94}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3BB08424-BCB7-49F7-A425-FF0CCC658A94}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3BB08424-BCB7-49F7-A425-FF0CCC658A94}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1F78D81E-EC04-4FF9-9F68-B5E40281853E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1F78D81E-EC04-4FF9-9F68-B5E40281853E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1F78D81E-EC04-4FF9-9F68-B5E40281853E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1F78D81E-EC04-4FF9-9F68-B5E40281853E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{074A4C96-3603-4D7B-B011-C2B624493BA8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{074A4C96-3603-4D7B-B011-C2B624493BA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{074A4C96-3603-4D7B-B011-C2B624493BA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{074A4C96-3603-4D7B-B011-C2B624493BA8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -67,7 +67,7 @@ Global
 		{18BFA524-C9DF-4E0C-BE9A-02B1DB0E90E9} = {2CA97F07-D72D-4504-97CD-6CE91BF21043}
 		{271FBCCE-765F-4EA3-BF44-130A5FDF072C} = {2CA97F07-D72D-4504-97CD-6CE91BF21043}
 		{8D1C9E15-1A59-4855-816D-9E69547BA1E5} = {2CA97F07-D72D-4504-97CD-6CE91BF21043}
-		{3BB08424-BCB7-49F7-A425-FF0CCC658A94} = {28FA7E92-B6B2-42AA-B866-F1CE56387C8A}
 		{1F78D81E-EC04-4FF9-9F68-B5E40281853E} = {2CA97F07-D72D-4504-97CD-6CE91BF21043}
+		{074A4C96-3603-4D7B-B011-C2B624493BA8} = {28FA7E92-B6B2-42AA-B866-F1CE56387C8A}
 	EndGlobalSection
 EndGlobal

@@ -1,6 +1,7 @@
 ﻿using Azure;
 using Azure.AI.OpenAI;
 using MagellanGPT.Application.Common.Interfaces;
+using MagellanGPT.Infrastructure.KeyVault;
 using Microsoft.Extensions.Configuration;
 
 namespace MagellanGPT.Infrastructure.OpenAI;
@@ -18,7 +19,7 @@ public class OpenAIService : IOpenAIService
     {
         _client = new OpenAIClient(
           new Uri(configuration.GetSection("OpenAi:Endpoint").Value!),
-          new AzureKeyCredential(configuration.GetSection("OpenAi:Key").Value!));
+          new AzureKeyCredential(SecretManager.GetInstance().OpenAiKey));
 
         _deploymentName = configuration.GetSection("OpenAi:DefaultDeploymentName").Value!;
     }
@@ -80,7 +81,7 @@ public class OpenAIService : IOpenAIService
     }
 
     // TODO: Remove if not used
-    public async Task<string> ProcessDemandSynchronously(string question)
+    public async Task<(string Text, int TotalTokens, int RequestTokens, int ResponseTokens)> ProcessDemandSynchronously(string question)
     {
         ChatCompletions responseWithoutStream = await _client.GetChatCompletionsAsync(
         new ChatCompletionsOptions()
@@ -101,7 +102,60 @@ public class OpenAIService : IOpenAIService
         var requestTokens = responseWithoutStream.Usage.PromptTokens;
         var totalTokens = responseWithoutStream.Usage.TotalTokens;
 
-        return responseWithoutStream.Choices[0].Message.Content;
+        return (responseWithoutStream.Choices[0].Message.Content, totalTokens, requestTokens, completionTokens);
+    }
+
+    public async Task<(string Text, int TotalTokens, int RequestTokens, int ResponseTokens)> ProcessDemandWithRagSynchronously(string question, string document, string? deploymentName = null)
+    {
+        _deploymentName = deploymentName is not null ? deploymentName : _deploymentName;
+
+        // Prompt Chaining https://www.promptingguide.ai/fr/techniques/prompt_chaining
+        ChatCompletions response = await _client.GetChatCompletionsAsync(
+        new ChatCompletionsOptions()
+        {
+            DeploymentName = _deploymentName,
+            Messages =
+            {
+                new ChatRequestSystemMessage($"Tu es un expert quelque soit le domaine." +
+                $"Ta tâche est d'aider à répondre à une question en utilisant un document et tes connaissances. " +
+                $"La première étape est d'extraire des informations pertinentes du document, délimité par ###" +
+                $". Génère une réponse. " +
+                $"### {document} ###"),
+                new ChatRequestUserMessage(question),
+            },
+            Temperature = 1,
+            MaxTokens = 800,
+            FrequencyPenalty = 0,
+            PresencePenalty = 0,
+        });
+
+        var completionTokens = response.Usage.CompletionTokens;
+        var requestTokens = response.Usage.PromptTokens;
+        var totalTokens = response.Usage.TotalTokens;
+
+        return (response.Choices[0].Message.Content, totalTokens, requestTokens, completionTokens);
+    }
+
+    public async Task<(ReadOnlyMemory<float> EmbeddingArray, int TotalTokens)> GetEmbeddingsAsync(string document)
+    {
+        EmbeddingsOptions embeddingOptions = new()
+        {
+            DeploymentName = "text-embedding-ada-002",
+            Input = { document },
+        };
+
+        var returnValue = await _client.GetEmbeddingsAsync(embeddingOptions);
+
+        var promptTokens = returnValue.Value.Usage.PromptTokens;
+        var totalTokens = returnValue.Value.Usage.TotalTokens;
+        var embeddingArray = returnValue.Value.Data[0].Embedding;
+
+        foreach (float item in returnValue.Value.Data[0].Embedding.ToArray())
+        {
+            Console.WriteLine(item);
+        }
+
+        return (embeddingArray, totalTokens);
     }
 }
 
