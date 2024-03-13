@@ -7,8 +7,8 @@
     <UserSecretsId>dad073c0-ebe9-4b66-96c6-f7830fe7da3d</UserSecretsId>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(RunConfiguration)' == 'https - Production' " />
-  <PropertyGroup Condition=" '$(RunConfiguration)' == 'https - Development' " />
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'Production' " />
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'Development' " />
   <ItemGroup>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="8.0.2" />
