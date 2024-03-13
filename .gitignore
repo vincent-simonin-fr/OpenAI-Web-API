@@ -406,3 +406,5 @@ ASALocalRun/
 
 # Files
 src/*/Files/
+
+.sonarqube
