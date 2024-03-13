@@ -24,15 +24,16 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
     public async Task<ResponseDto> Handle(CreateAICompletionSynchronously request, CancellationToken cancellationToken)
     {
         var existingConversation = _context.Conversations.FirstOrDefault(c => c.Id == "13" && c.ConversationId == "759f368c-c14c-49eb-8770-69881e15367f");
+
         (string Text, int TotalTokens, int RequestTokens, int ResponseTokens) response = await _openAIService.ProcessDemandSynchronously(request.Demand);
 
         var conversation = await StoreDialog(existingConversation, request.Demand, response, cancellationToken);
 
         var dialog = conversation.Dialogs.Last();
 
-        var dialogTokenCost = dialog.TokensRequest + dialog.TokensResponse + dialog.TokensDocumentProcessing;
+        var dialogTokenCost = (int)dialog.TokensRequest + (int)dialog.TokensResponse;
 
-        return new ResponseDto { Id = conversation.Id, ConversationId = conversation.ConversationId, Answer = dialog.Answer, Tokens = (int)dialogTokenCost };
+        return new ResponseDto { Id = conversation.Id, ConversationId = conversation.ConversationId, Answer = dialog.Answer, Tokens = dialogTokenCost };
     }
 
     private async Task<Conversation> StoreDialog(Conversation? existingConversation, string demand, (string Text, int TotalTokens, int RequestTokens, int ResponseTokens) response, CancellationToken cancellationToken)
