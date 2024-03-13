@@ -1,15 +1,16 @@
 ﻿using MagellanGPT.Application.Common.Interfaces;
+using MagellanGPT.Application.Common.Models;
 using MagellanGPT.Domain.Entities;
 using MediatR;
 
 namespace MagellanGPT.Application.ChatbotUseCasesCommands;
 
-public record CreateAICompletionSynchronously : IRequest<string>
+public record CreateAICompletionSynchronously : IRequest<ResponseDto>
 {
     public string Demand { get; set; }
 }
 
-public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICompletionSynchronously, string>
+public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICompletionSynchronously, ResponseDto>
 {
     private readonly IOpenAIService _openAIService;
     private readonly IApplicationDbContext _context;
@@ -20,46 +21,63 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
         _context = context;
     }
 
-    public async Task<string> Handle(CreateAICompletionSynchronously request, CancellationToken cancellationToken)
+    public async Task<ResponseDto> Handle(CreateAICompletionSynchronously request, CancellationToken cancellationToken)
     {
         var existingConversation = _context.Conversations.FirstOrDefault(c => c.Id == "13" && c.ConversationId == "759f368c-c14c-49eb-8770-69881e15367f");
-        var response = _openAIService.ProcessDemandSynchronously(request.Demand).Result;
+        (string Text, int TotalTokens, int RequestTokens, int ResponseTokens) response = await _openAIService.ProcessDemandSynchronously(request.Demand);
+
+        var conversation = await StoreDialog(existingConversation, request.Demand, response, cancellationToken);
+
+        var dialog = conversation.Dialogs.Last();
+
+        var dialogTokenCost = dialog.TokensRequest + dialog.TokensResponse + dialog.TokensDocumentProcessing;
+
+        return new ResponseDto { Id = conversation.Id, ConversationId = conversation.ConversationId, Answer = dialog.Answer, Tokens = (int)dialogTokenCost };
+    }
+
+    private async Task<Conversation> StoreDialog(Conversation? existingConversation, string demand, (string Text, int TotalTokens, int RequestTokens, int ResponseTokens) response, CancellationToken cancellationToken)
+    {
+        Conversation conversation;
 
         if (existingConversation is not null)
         {
-            existingConversation.Dialogs.Add(new Dialog
+            conversation = existingConversation;
+            conversation.Tokens += response.TotalTokens;
+            conversation.Dialogs.Add(new Dialog
             {
-                Question = request.Demand,
-                Answer = response,
+                Question = demand,
+                Answer = response.Text,
                 DocumentId = null,
-                Token = 100,
+                TokensRequest = response.RequestTokens,
+                TokensResponse = response.ResponseTokens,
                 CreatedAt = DateTime.Now,
             });
         }
         else
         {
-            var conversation = new Conversation
+            conversation = new Conversation
             {
                 Id = "13",
                 ConversationId = Guid.NewGuid().ToString(),
                 LlmDeploymentName = "ChatGPT35Turbo",
                 Title = "Test",
                 Dialogs = new List<Dialog> { new Dialog
-                    {
-                        Question = request.Demand,
-                        Answer = response,
+                {
+                        Question = demand,
+                        Answer = response.Text,
                         DocumentId = null,
-                        Token = 100,
+                        TokensRequest = response.RequestTokens,
+                        TokensResponse = response.ResponseTokens,
                         CreatedAt = DateTime.Now,
                     }
-                }
+                },
+                Tokens = response.TotalTokens
             };
             _context.Conversations.Add(conversation);
         }
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        return response;
+        return conversation;
     }
 }
-
