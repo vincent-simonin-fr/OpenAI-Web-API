@@ -3,25 +3,25 @@ using System.Linq.Expressions;
 
 namespace MagellanGPT.Application.Common.Models;
 
-public class DialogDTO
+public class DialogDto
 {
     public string? Question { get; set; }
     public string? Answer { get; set; }
-    public string? DocumentId { get; set; }
-    public int? Token { get; set; }
+    public List<string>? DocumentId { get; set; }
+    public int? Tokens { get; set; }
     public DateTime CreatedAt { get; set; }
 
-    public static Expression<Func<Dialog, DialogDTO>> Projection { get; } = dialog
-            => new DialogDTO
+    public static Expression<Func<Dialog, DialogDto>> Projection { get; } = dialog
+            => new DialogDto
             {
                 Question = dialog.Question,
                 Answer = dialog.Answer,
                 DocumentId = dialog.DocumentId,
-                Token = dialog.Token,
+                Tokens = dialog.TokensRequest + dialog.TokensResponse + dialog.TokensDocumentProcessing,
                 CreatedAt = dialog.CreatedAt
             };
 
-    public static DialogDTO FromEntity(Dialog dialog)
+    public static DialogDto FromEntity(Dialog dialog)
     {
         return Projection.Compile().Invoke(dialog);
     }

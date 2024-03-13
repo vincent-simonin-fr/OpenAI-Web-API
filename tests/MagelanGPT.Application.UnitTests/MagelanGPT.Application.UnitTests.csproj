@@ -15,11 +15,12 @@
     <PackageReference Include="NUnit" Version="3.14.0" />
     <PackageReference Include="NUnit.Analyzers" Version="3.9.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="9.20.0.85982">
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="9.21.0.86780">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Moq" Version="4.20.70" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.3" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,8 +28,20 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Common\" />
+    <None Remove="Common\Behaviours\" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="..\..\SonarLint.xml">
       <Link>SonarLint.xml</Link>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Common\" />
+    <Folder Include="Common\Behaviours\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MagellanGPT.Application\MagellanGPT.Application.csproj" />
+    <ProjectReference Include="..\..\src\MagellanGPT.Infrastructure\MagellanGPT.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

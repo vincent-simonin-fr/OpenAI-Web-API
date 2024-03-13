@@ -3,6 +3,7 @@ using MagellanGPT.Application.ChatbotUseCases.Queries;
 using MagellanGPT.Application.ChatbotUseCasesCommands;
 using MagellanGPT.Application.Common.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 
 namespace MagellanGPT.API.Controllers;
 
@@ -15,14 +16,15 @@ public class ChatController : ApiControllerBase
         _logger = logger;
     }
 
-    // GET: api/values
+    // GET: api/chat
+    // TODO : POC connexion to CosmosDb => To Remove
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ConversationDTO>>> Get()
+    public async Task<ActionResult<IEnumerable<ConversationDto>>> Get()
     {
         return Ok(await Mediator.Send(new GetDataFromCosmosDb()));
     }
 
-    // POST api/values
+    // POST api/chat
     [HttpPost]
     public async IAsyncEnumerable<string> Post([FromBody]string question)
     {
@@ -45,6 +47,7 @@ public class ChatController : ApiControllerBase
         }
     }
 
+    // POST api/chat/synchro
     [HttpPost]
     [Route("synchro")]
     public async Task<ActionResult<string>> PostSynchrone([FromBody] string question)
