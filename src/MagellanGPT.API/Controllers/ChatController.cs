@@ -16,14 +16,6 @@ public class ChatController : ApiControllerBase
         _logger = logger;
     }
 
-    // GET: api/chat
-    // TODO : POC connexion to CosmosDb => To Remove
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<ConversationDto>>> Get()
-    {
-        return Ok(await Mediator.Send(new GetDataFromCosmosDb()));
-    }
-
     //// POST api/chat
     //[HttpPost]
     // [Route("stream")]
@@ -51,9 +43,9 @@ public class ChatController : ApiControllerBase
     // POST api/chat
     [HttpPost]
     // [Route("synchro")]
-    public async Task<ActionResult<ResponseDto>> PostSynchrone([FromBody] string question)
+    public async Task<ActionResult<ResponseDto>> PostSynchrone([FromBody] object question)
     {
-        var completions = await Mediator.Send(new CreateAICompletionSynchronously { Demand = question });
+        var completions = await Mediator.Send(new CreateAICompletionSynchronously { Demand = question.ToString()! });
 
         return completions;
     }

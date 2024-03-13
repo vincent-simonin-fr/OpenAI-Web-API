@@ -1,4 +1,5 @@
 ﻿using MagellanGPT.API;
+using Polly;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,11 +14,6 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddAPIServices();
 
 builder.Services.AddHttpClient();
-
-builder.Services.AddHttpsRedirection(options =>
-{
-    options.HttpsPort = 443;
-});
 
 var app = builder.Build();
 
@@ -37,6 +33,9 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
+    app.UseSwagger();
+    app.UseSwaggerUI();
+
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
