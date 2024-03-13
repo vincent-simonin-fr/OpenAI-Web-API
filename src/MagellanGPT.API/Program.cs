@@ -1,4 +1,5 @@
 ﻿using MagellanGPT.API;
+using Polly;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +33,9 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
+    app.UseSwagger();
+    app.UseSwaggerUI();
+
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }

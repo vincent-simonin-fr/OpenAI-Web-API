@@ -8,7 +8,7 @@ public class RagController : ApiControllerBase
 
     // POST api/rag
     [HttpPost]
-    public async Task<ActionResult<string>> OnPostUploadAsync(string question, List<IFormFile> files)
+    public async Task<ActionResult<string>> OnPostUploadAsync(object question, List<IFormFile> files)
     {
         List<string> filePathList = new();
         long size = files.Sum(f => f.Length);
@@ -27,7 +27,7 @@ public class RagController : ApiControllerBase
             }
         }
 
-        var completions = await Mediator.Send(new CreateAICompletionWithMemorizePDfFiles { FilePathList = filePathList, Demand = question });
+        var completions = await Mediator.Send(new CreateAICompletionWithMemorizePDfFiles { FilePathList = filePathList, Demand = question.ToString()! });
 
         // TODO : Refactor loop for reusable function
         //await foreach (var completion in completions)

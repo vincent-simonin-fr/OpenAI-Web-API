@@ -18,25 +18,23 @@
         "ASPNETCORE_HTTPS_PORTS": "443"
       }
     },
-    "https - Production": {
+    "Production": {
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "health",
       "applicationUrl": "https://localhost:7166;",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Production",
-        "ASPNETCORE_HTTPS_PORTS": "443"
+        "ASPNETCORE_ENVIRONMENT": "Production"
       },
       "dotnetRunMessages": true
     },
-    "https - Development": {
+    "Development": {
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "swagger",
       "applicationUrl": "https://localhost:7166;",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_HTTPS_PORTS": "443"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "dotnetRunMessages": true
     }
