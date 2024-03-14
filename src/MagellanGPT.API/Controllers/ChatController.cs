@@ -42,12 +42,20 @@ public class ChatController : ApiControllerBase
 
     // POST api/chat
     [HttpPost]
-    // [Route("synchro")]
+    [EndpointDescription("Traitement des demandes utilisateur")]
     public async Task<ActionResult<ResponseDto>> PostSynchrone([FromBody] CreateAICompletionSynchronously request)
     {
         var completions = await Mediator.Send(request);
 
         return completions;
+    }
+
+    // POST api/chat
+    [HttpGet]
+    [EndpointDescription("Historique des conversations de l'utilisateur exécutant la requête")]
+    public async Task<ActionResult<List<ConversationDto>>> GetHistoricByUser()
+    {
+        return Ok(await Mediator.Send(new GetHistoricOfConversationByCurrentUser()));
     }
 }
 
