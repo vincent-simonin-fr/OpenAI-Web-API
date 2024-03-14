@@ -56,12 +56,12 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
 
     private (Conversation Conversation, bool IsExistingConversation) InitializeConversation(CreateAICompletionSynchronously request)
     {
-        Conversation conversation;
+        Conversation conversation = _context.Conversations.FirstOrDefault(c => c.Id == request.UserId && c.ConversationId == request.ConversationId);
         bool isExistingConversation;
-        if (request.ConversationId is not null)
+        if (conversation is not null)
         {
-            conversation = _context.Conversations.First(c => c.Id == request.UserId && c.ConversationId == request.ConversationId)
-                ?? throw new InvalidDataException("La conversation n'existe pas dans CosmosDb");
+            //conversation = _context.Conversations.First(c => c.Id == request.UserId && c.ConversationId == request.ConversationId)
+            //    ?? throw new InvalidDataException("La conversation n'existe pas dans CosmosDb");
             isExistingConversation = true;
             conversation.Dialogs!.Add(new Dialog
             {

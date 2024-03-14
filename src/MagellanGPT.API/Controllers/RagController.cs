@@ -1,4 +1,5 @@
-﻿using MagellanGPT.Application.RAGUseCases.Commands;
+﻿using MagellanGPT.Application.Common.Models;
+using MagellanGPT.Application.RAGUseCases.Commands;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MagellanGPT.API.Controllers;
@@ -8,7 +9,7 @@ public class RagController : ApiControllerBase
 
     // POST api/rag
     [HttpPost]
-    public async Task<ActionResult<string>> OnPostUploadAsync(object question, List<IFormFile> files)
+    public async Task<ActionResult<ResponseDto>> OnPostUploadAsync(string question, List<IFormFile> files)
     {
         List<string> filePathList = new();
         long size = files.Sum(f => f.Length);
