@@ -1,21 +1,27 @@
 ﻿using System.Text;
+using MagellanGPT.Application.ChatbotUseCasesCommands;
 using MagellanGPT.Application.Common.Interfaces;
+using MagellanGPT.Application.Common.Models;
 using MagellanGPT.Domain.Entities;
 using MediatR;
 using Microsoft.KernelMemory.DataFormats;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
+using UglyToad.PdfPig.Logging;
 
 namespace MagellanGPT.Application.RAGUseCases.Commands;
 
-public record CreateAICompletionWithMemorizePDfFiles : IRequest<string>
+public record CreateAICompletionWithMemorizePDfFiles : IRequest<ResponseDto>
 {
-    public required List<string> FilePathList { get; set; }
+    public string? UserId { get; set; } = "13";
+    public string? ConversationId { get; set; } = "759f368c-c14c-49eb-8770-69881e15367f";
+    public string? LlmDeploymentName { get; set; } = "ChatGPT35Turbo";
+    public required List<string>? FilePathList { get; set; }
     public string Demand { get; set; }
 };
 
-public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<CreateAICompletionWithMemorizePDfFiles, string>
+public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<CreateAICompletionWithMemorizePDfFiles, ResponseDto>
 {
     private readonly IOpenAIService _openAIService;
     private readonly IAzureAiSearchService _azureAiSearchService;
@@ -29,14 +35,21 @@ public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<Cre
     }
 
     /// <summary>
+    /// Check if connection exist
+    /// If not exist initialize new conversation
+    /// Process demand
+    /// Store Dialog
+    /// Return ResponseDto
     /// ExtractContent from PDF https://github.com/microsoft/kernel-memory/blob/main/examples/205-dotnet-extract-text-from-docs/Program.cs
     /// https://stackoverflow.com/questions/77261548/how-to-appropriately-use-the-azure-ai-openai-openaiclient-getchatcompletionsstre
     /// </summary>
     /// <param name="request"></param>
     /// <param name="cancellationToken"></param>
     /// <returns>Task<IAsyncEnumerable<StreamingChatCompletionsUpdate>></returns>
-    public async Task<string> Handle(CreateAICompletionWithMemorizePDfFiles request, CancellationToken cancellationToken)
+    public async Task<ResponseDto> Handle(CreateAICompletionWithMemorizePDfFiles request, CancellationToken cancellationToken)
     {
+        // var initialization = InitializeConversation(request);
+
         // S'agit il d'une conversation existante
         var existingConversation = _context.Conversations.FirstOrDefault(c => c.Id == "13" && c.ConversationId == "759f368c-c14c-49eb-8770-69881e15367f");
 
@@ -56,7 +69,13 @@ public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<Cre
         // Persistence du dialogue en base de données
         await StoreDialog(existingConversation, request.Demand, response, (documentsIds, documentsProcessing.TokenCost), cancellationToken);
 
-        return response.Text;
+        return new ResponseDto
+        {
+            Id = request.UserId,
+            ConversationId = request.ConversationId,
+            Answer = response.Text,
+            Tokens = response.TotalTokens
+        };
     }
 
     private async Task<(Dictionary<string, string> Documents, int TokenCost)> ProcessAndStorePdf(List<string> filePathList)
@@ -131,6 +150,51 @@ public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<Cre
         }
 
         await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    private (Conversation Conversation, bool IsExistingConversation) InitializeConversation(CreateAICompletionWithMemorizePDfFiles request)
+    {
+        Conversation conversation = _context.Conversations.FirstOrDefault(c => c.Id == request.UserId && c.ConversationId == request.ConversationId);
+        bool isExistingConversation;
+        if (conversation is not null)
+        {
+            //conversation = _context.Conversations.First(c => c.Id == request.UserId && c.ConversationId == request.ConversationId)
+            //    ?? throw new InvalidDataException("La conversation n'existe pas dans CosmosDb");
+            isExistingConversation = true;
+            conversation.Dialogs!.Add(new Dialog
+            {
+                Question = request.Demand,
+                Answer = null,
+                DocumentId = null,
+                TokensRequest = 0,
+                TokensResponse = 0,
+                CreatedAt = DateTime.Now,
+            });
+        }
+        else
+        {
+            conversation = new Conversation
+            {
+                Id = request.UserId!,
+                ConversationId = Guid.NewGuid().ToString(),
+                LlmDeploymentName = request.LlmDeploymentName!,
+                Title = "WIP",
+                Dialogs = new List<Dialog> { new Dialog
+                {
+                    Question = request.Demand,
+                    Answer = null,
+                    DocumentId = null,
+                    TokensRequest = 0,
+                    TokensResponse = 0,
+                    CreatedAt = DateTime.Now,
+                }},
+                Tokens = 0
+            };
+
+            isExistingConversation = false;
+        }
+
+        return (conversation, isExistingConversation);
     }
 }
 
