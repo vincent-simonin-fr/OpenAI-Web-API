@@ -15,7 +15,7 @@ public class ConversationDto
             {
                 Id = conversation.Id,
                 ConversationId = conversation.ConversationId,
-                Dialogs = conversation.Dialogs.AsQueryable().Select(DialogDto.Projection).ToList(),
+                Dialogs = conversation.Dialogs!.AsQueryable().Select(DialogDto.Projection).ToList(),
                 Tokens = conversation.Tokens,
             };
 

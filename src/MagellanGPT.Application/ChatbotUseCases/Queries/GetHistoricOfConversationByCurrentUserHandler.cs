@@ -1,28 +1,27 @@
-﻿using System.Dynamic;
-using System.Text.Json;
+﻿using System.Text.Json;
 using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Application.Common.Models;
-using MagellanGPT.Domain.Entities;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace MagellanGPT.Application.ChatbotUseCases.Queries;
 
-public record GetDataFromCosmosDb : IRequest<IEnumerable<ConversationDto>>;
+public record GetHistoricOfConversationByCurrentUser : IRequest<IEnumerable<ConversationDto>>;
 
-public class GetDataFromCosmosDbHandler : IRequestHandler<GetDataFromCosmosDb, IEnumerable<ConversationDto>>
+public class GetHistoricOfConversationByCurrentUserHandler : IRequestHandler<GetHistoricOfConversationByCurrentUser, IEnumerable<ConversationDto>>
 {
     private readonly IApplicationDbContext _context;
 
-    public GetDataFromCosmosDbHandler(IApplicationDbContext context)
+    public GetHistoricOfConversationByCurrentUserHandler(IApplicationDbContext context)
     {
         _context = context;
     }
 
-    public async Task<IEnumerable<ConversationDto>> Handle(GetDataFromCosmosDb request, CancellationToken cancellationToken)
+    public async Task<IEnumerable<ConversationDto>> Handle(GetHistoricOfConversationByCurrentUser request, CancellationToken cancellationToken)
     {
-        var conversation = _context.Conversations.AsQueryable();
+        var conversation = _context.Conversations.Where(conversation => conversation.Id == "13").ToList();
 
-        return conversation.Select(ConversationDto.Projection).ToList();
+        return conversation.AsQueryable().Select(ConversationDto.Projection).ToList();
     }
 
     // TODO : Pour étude parser à refactoriser
