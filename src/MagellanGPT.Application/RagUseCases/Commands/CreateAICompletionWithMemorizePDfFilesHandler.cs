@@ -1,17 +1,18 @@
-﻿using System.Text;
-using MagellanGPT.Application.ChatbotUseCasesCommands;
+﻿using System.Data;
+using System.Text;
 using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Application.Common.Models;
+using MagellanGPT.Application.Common.Security;
 using MagellanGPT.Domain.Entities;
 using MediatR;
 using Microsoft.KernelMemory.DataFormats;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.DocumentLayoutAnalysis.TextExtractor;
-using UglyToad.PdfPig.Logging;
 
 namespace MagellanGPT.Application.RAGUseCases.Commands;
 
+// [Authorize(Roles = "user")]
 public record CreateAICompletionWithMemorizePDfFiles : IRequest<ResponseDto>
 {
     public string? UserId { get; set; } = "13";

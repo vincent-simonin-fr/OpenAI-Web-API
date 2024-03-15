@@ -5,10 +5,11 @@ using MediatR;
 
 namespace MagellanGPT.Application.ChatbotUseCasesCommands;
 
+// [Authorize(Roles = "user")]
 public record CreateAICompletionSynchronously : IRequest<ResponseDto>
 {
-    public string? UserId { get; set; } = "13";
-    public string? ConversationId { get; set; } = "759f368c-c14c-49eb-8770-69881e15367f";
+    public string? UserId { get; set; } = "16";
+    public string? ConversationId { get; set; } = "bc029032-c074-408b-af71-49d0d57df506";
     public string? LlmDeploymentName { get; set; } = "ChatGPT35Turbo";
     public required string Demand { get; set; }
 }
@@ -38,19 +39,17 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
     {
         var initialization = InitializeConversation(request);
 
-        (string Text, int TotalTokens, int RequestTokens, int ResponseTokens) response = await _openAIService.ProcessDemandSynchronously(initialization.Conversation);
+        var conversation = await _openAIService.ProcessDemandSynchronously(initialization.Conversation);
 
-        initialization.Conversation = await StoreDialog(initialization.Conversation, response, initialization.IsExistingConversation, cancellationToken);
+        initialization.Conversation = await StoreDialog(initialization.Conversation, initialization.IsExistingConversation, cancellationToken);
 
         var dialog = initialization.Conversation.Dialogs![^1];
-
-        var dialogTokenCost = (int)dialog.TokensRequest! + (int)dialog.TokensResponse!;
 
         return new ResponseDto {
             Id = initialization.Conversation.Id,
             ConversationId = initialization.Conversation.ConversationId,
             Answer = dialog.Answer,
-            Tokens = dialogTokenCost
+            Tokens = (int)dialog.TokensRequest! + (int)dialog.TokensResponse!
         };
     }
 
@@ -60,9 +59,6 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
         bool isExistingConversation;
         if (conversation is not null)
         {
-            //conversation = _context.Conversations.First(c => c.Id == request.UserId && c.ConversationId == request.ConversationId)
-            //    ?? throw new InvalidDataException("La conversation n'existe pas dans CosmosDb");
-            isExistingConversation = true;
             conversation.Dialogs!.Add(new Dialog
             {
                 Question = request.Demand,
@@ -72,6 +68,8 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
                 TokensResponse = 0,
                 CreatedAt = DateTime.Now,
             });
+
+            isExistingConversation = true;
         }
         else
         {
@@ -101,22 +99,9 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
 
     private async Task<Conversation> StoreDialog(
         Conversation conversation,
-        (string Text, int TotalTokens, int RequestTokens, int ResponseTokens) response,
         bool isExistingConversation,
         CancellationToken cancellationToken)
     {
-
-        var lastDialog = conversation.Dialogs![conversation.Dialogs!.Count - 1];
-
-        lastDialog.Answer = response.Text;
-        lastDialog.DocumentId = null;
-        lastDialog.TokensRequest = response.RequestTokens;
-        lastDialog.TokensResponse = response.ResponseTokens;
-        lastDialog.CreatedAt = DateTime.Now;
-
-
-        conversation.Tokens += response.TotalTokens;
-
         if(!isExistingConversation) _context.Conversations.Add(conversation);
 
         await _context.SaveChangesAsync(cancellationToken);

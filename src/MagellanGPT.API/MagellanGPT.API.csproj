@@ -18,6 +18,7 @@
     </PackageReference>
     <PackageReference Include="Polly" Version="8.3.1" />
     <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="8.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.3" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,14 +32,21 @@
   <ItemGroup>
     <None Remove="Services\" />
     <None Remove="Files\" />
+    <None Remove="Filters\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Services\" />
     <Folder Include="Files\" />
+    <Folder Include="Filters\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\SonarLint.xml">
       <Link>SonarLint.xml</Link>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="certificate.pem">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 </Project>

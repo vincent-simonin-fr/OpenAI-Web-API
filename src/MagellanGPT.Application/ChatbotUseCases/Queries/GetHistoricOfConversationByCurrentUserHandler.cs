@@ -1,11 +1,13 @@
-﻿using System.Text.Json;
+﻿using System.Data;
+using System.Text.Json;
 using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Application.Common.Models;
+using MagellanGPT.Application.Common.Security;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace MagellanGPT.Application.ChatbotUseCases.Queries;
 
+[Authorize(Roles = "user")]
 public record GetHistoricOfConversationByCurrentUser : IRequest<IEnumerable<ConversationDto>>;
 
 public class GetHistoricOfConversationByCurrentUserHandler : IRequestHandler<GetHistoricOfConversationByCurrentUser, IEnumerable<ConversationDto>>

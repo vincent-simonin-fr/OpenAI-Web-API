@@ -1,9 +1,11 @@
-﻿using MediatR;
+﻿using MagellanGPT.API.Filters;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MagellanGPT.API.Controllers;
 
 [ApiController]
+[ApiExceptionFilter]
 [Route("api/[controller]")]
 public abstract class ApiControllerBase : ControllerBase
 {

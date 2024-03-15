@@ -1,8 +1,10 @@
 ﻿using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Infrastructure.Constant;
+using MagellanGPT.Infrastructure.Identity;
 using MagellanGPT.Infrastructure.KeyVault;
 using MagellanGPT.Infrastructure.OpenAI;
 using MagellanGPT.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -13,6 +15,14 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddTransient<UserManager<ApplicationUser>>();
+        services.AddTransient<IIdentityService, IdentityService>();
+
+        services
+            .AddIdentityCore<ApplicationUser>()
+            .AddRoles<IdentityRole>()
+            .AddEntityFrameworkStores<ApplicationDbContext>();
+
         services.AddScoped<IAzureKeyvaultService, AzureKeyvaultService>();
 
         InitSecretManager(configuration);
