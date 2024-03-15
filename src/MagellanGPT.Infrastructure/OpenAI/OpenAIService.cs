@@ -82,11 +82,27 @@ public class OpenAIService : IOpenAIService
     }
 
     // TODO: Remove if not used
-    public async Task<(string Text, int TotalTokens, int RequestTokens, int ResponseTokens)> ProcessDemandSynchronously(Conversation conversation)
+    public async Task<Conversation> ProcessDemandSynchronously(Conversation conversation)
     {
-        List<ChatRequestMessage> messages = new List<ChatRequestMessage>() {
+        List<ChatRequestMessage> messages;
+        var question = conversation.Dialogs[^1].Question;
+        string? response = null;
+        string? title = null;
+
+        if (conversation.Dialogs.Count == 1)
+        {
+            messages = new List<ChatRequestMessage>() {
+                new ChatRequestSystemMessage($"Tu es un assistant IA expert. " +
+                $"La complétion devra comportée une première partie titre délimité par <Title>, par exemple ###titre###, en début de réponse, " +
+                $"cette partie titre doit résumer la question suivante '{question}' en 4 mots maximum"),
+            };
+        }
+        else
+        {
+            messages = new List<ChatRequestMessage>() {
                 new ChatRequestSystemMessage(@"Tu es un assistant IA expert."),
             };
+        }
 
         conversation.Dialogs.ForEach(dialog =>
         {
@@ -97,30 +113,43 @@ public class OpenAIService : IOpenAIService
             }
         });
 
-        var question = conversation.Dialogs[^1].Question;
-
         messages.Add(new ChatRequestUserMessage(question));
 
-        ChatCompletions responseWithoutStream = await _client.GetChatCompletionsAsync(
-        new ChatCompletionsOptions()
+        var chatCompletionsOptions = new ChatCompletionsOptions()
         {
             DeploymentName = _deploymentName,
-            Messages =
-            {
-                new ChatRequestSystemMessage(@"Tu es un assistant IA expert."),
-                new ChatRequestUserMessage(question),
-            },
-            Temperature = 0.5f,
+            Temperature = (float)0.7,
             MaxTokens = 800,
+
+            NucleusSamplingFactor = (float)0.95,
             FrequencyPenalty = 0,
             PresencePenalty = 0,
-        });
+        };
 
-        var completionTokens = responseWithoutStream.Usage.CompletionTokens;
-        var requestTokens = responseWithoutStream.Usage.PromptTokens;
-        var totalTokens = responseWithoutStream.Usage.TotalTokens;
+        messages.ForEach(chatCompletionsOptions.Messages.Add);
 
-        return (responseWithoutStream.Choices[0].Message.Content, totalTokens, requestTokens, completionTokens);
+        ChatCompletions responseWithoutStream = await _client.GetChatCompletionsAsync(chatCompletionsOptions);
+
+        if (responseWithoutStream.Choices[0].Message.Content.Contains("<Title>"))
+        {
+            var responseWithTitle = responseWithoutStream.Choices[0].Message.Content.Split("<Title>")[1].Split("</Title>");
+            title = responseWithTitle[0];
+            response = responseWithTitle[1].Replace("\n\n", "");
+
+            conversation.Title = title;
+            conversation.Dialogs[^1].Answer = response;
+        }
+        else
+        {
+            conversation.Dialogs[^1].Answer = responseWithoutStream.Choices[0].Message.Content;
+        }
+
+        conversation.Dialogs[^1].CreatedAt = DateTime.UtcNow;
+        conversation.Dialogs[^1].TokensRequest = responseWithoutStream.Usage.PromptTokens;
+        conversation.Dialogs[^1].TokensResponse = responseWithoutStream.Usage.CompletionTokens;
+        conversation.Tokens += responseWithoutStream.Usage.TotalTokens;
+
+        return conversation;
     }
 
     public async Task<(string Text, int TotalTokens, int RequestTokens, int ResponseTokens)> ProcessDemandWithRagSynchronously(string question, string document, string? deploymentName = null)

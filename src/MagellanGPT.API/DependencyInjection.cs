@@ -23,16 +23,18 @@ public static class DependencyInjection
 
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 
+        services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(options =>
         {
+            options.SwaggerDoc("v1", new OpenApiInfo { Title = "MagellanGPT", Version = "v1" });
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
             {
                 Name = "Authorization",
-                Type = SecuritySchemeType.OpenIdConnect,
+                Type = SecuritySchemeType.ApiKey,
                 Scheme = "Bearer",
                 BearerFormat = "JWT",
                 In = ParameterLocation.Header,
-                Description = "Type into the textbox: Bearer {your JWT token}.",
+                Description = "JWT Authorization header using the Bearer scheme (Example: 'Bearer 12345abcdef')",
             });
             options.AddSecurityRequirement(new OpenApiSecurityRequirement
              {
@@ -43,7 +45,10 @@ public static class DependencyInjection
                              {
                                  Type = ReferenceType.SecurityScheme,
                                  Id = "Bearer"
-                             }
+                             },
+                             Scheme = "oauth2",
+                             Name = "Bearer",
+                             In = ParameterLocation.Header
                          },
                          Array.Empty<string>()
                  }
