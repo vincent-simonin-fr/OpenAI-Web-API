@@ -7,7 +7,7 @@ using MediatR;
 
 namespace MagellanGPT.Application.ChatbotUseCases.Queries;
 
-[Authorize(Roles = "user")]
+// [Authorize(Roles = "user")]
 public record GetHistoricOfConversationByCurrentUser : IRequest<IEnumerable<ConversationDto>>;
 
 public class GetHistoricOfConversationByCurrentUserHandler : IRequestHandler<GetHistoricOfConversationByCurrentUser, IEnumerable<ConversationDto>>
