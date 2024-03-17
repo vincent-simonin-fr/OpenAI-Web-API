@@ -4,6 +4,7 @@ using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Domain.Entities;
 using MagellanGPT.Infrastructure.KeyVault;
 using Microsoft.Extensions.Configuration;
+using Microsoft.VisualBasic;
 
 namespace MagellanGPT.Infrastructure.OpenAI;
 
@@ -152,9 +153,9 @@ public class OpenAIService : IOpenAIService
         return conversation;
     }
 
-    public async Task<(string Text, int TotalTokens, int RequestTokens, int ResponseTokens)> ProcessDemandWithRagSynchronously(string question, string document, string? deploymentName = null)
+    public async Task<Conversation> ProcessDemandWithRagSynchronously(Conversation conversation, string document)
     {
-        _deploymentName = deploymentName is not null ? deploymentName : _deploymentName;
+        _deploymentName = conversation.LlmDeploymentName is not null ? conversation.LlmDeploymentName : _deploymentName;
 
         // Prompt Chaining https://www.promptingguide.ai/fr/techniques/prompt_chaining
         ChatCompletions response = await _client.GetChatCompletionsAsync(
@@ -168,7 +169,7 @@ public class OpenAIService : IOpenAIService
                 $"La première étape est d'extraire des informations pertinentes du document, délimité par ###" +
                 $". Génère une réponse. " +
                 $"### {document} ###"),
-                new ChatRequestUserMessage(question),
+                new ChatRequestUserMessage(conversation.Dialogs![^1].Question),
             },
             Temperature = 1,
             MaxTokens = 800,
@@ -176,11 +177,13 @@ public class OpenAIService : IOpenAIService
             PresencePenalty = 0,
         });
 
-        var completionTokens = response.Usage.CompletionTokens;
-        var requestTokens = response.Usage.PromptTokens;
-        var totalTokens = response.Usage.TotalTokens;
+        conversation.Dialogs![^1].CreatedAt = DateTime.UtcNow;
+        conversation.Dialogs[^1].TokensRequest = response.Usage.PromptTokens;
+        conversation.Dialogs[^1].TokensResponse = response.Usage.CompletionTokens;
+        conversation.Tokens += response.Usage.TotalTokens;
+        conversation.Dialogs[^1].Answer = response.Choices[0].Message.Content;
 
-        return (response.Choices[0].Message.Content, totalTokens, requestTokens, completionTokens);
+        return conversation;
     }
 
     public async Task<(ReadOnlyMemory<float> EmbeddingArray, int TotalTokens)> GetEmbeddingsAsync(string document)

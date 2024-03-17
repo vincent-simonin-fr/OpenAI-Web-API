@@ -1,4 +1,5 @@
-﻿using MagellanGPT.API.Services;
+﻿using System.Reflection;
+using MagellanGPT.API.Services;
 using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +27,16 @@ public static class DependencyInjection
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(options =>
         {
-            options.SwaggerDoc("v1", new OpenApiInfo { Title = "MagellanGPT", Version = "v1" });
+            options.SwaggerDoc("v1", new OpenApiInfo {
+                Title = "MagellanGPT",
+                Version = "v1",
+                Description = "Assistant AI",
+                Contact = new OpenApiContact()
+                {
+                    Name = "Vincent Simonin",
+                    Email = "vincent.simonin@diiage.org",
+                }
+            });
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
             {
                 Name = "Authorization",
@@ -53,6 +63,10 @@ public static class DependencyInjection
                          Array.Empty<string>()
                  }
              });
+
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            options.IncludeXmlComments(xmlPath);
         });
 
         return services;

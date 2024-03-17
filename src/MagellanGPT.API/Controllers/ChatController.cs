@@ -1,4 +1,6 @@
-﻿using MagellanGPT.Application.ChatbotUseCases.Commands.CreateAICompletion;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
+using MagellanGPT.Application.ChatbotUseCases.Commands.CreateAICompletion;
 using MagellanGPT.Application.ChatbotUseCases.Queries;
 using MagellanGPT.Application.ChatbotUseCasesCommands;
 using MagellanGPT.Application.Common.Models;
@@ -43,6 +45,9 @@ public class ChatController : ApiControllerBase
     // POST api/chat
     [HttpPost]
     [EndpointDescription("Traitement des demandes utilisateur")]
+    [ProducesResponseType(typeof(ActionResult<ResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [Description("Traitement des demandes utilisateur")]
     public async Task<ActionResult<ResponseDto>> PostSynchrone([FromBody] CreateAICompletionSynchronously request)
     {
         var completions = await Mediator.Send(request);
@@ -50,9 +55,23 @@ public class ChatController : ApiControllerBase
         return completions;
     }
 
-    // POST api/chat
+    /// <summary>
+    /// You can search for Historic here.
+    /// </summary>
+    /// <remarks>
+    ///
+    ///  Header of request must contain the field Authorization
+    ///  
+    /// Sample request:
+    /// 
+    ///     Get api/Chat
+    ///     
+    /// </remarks>
+    /// <returns> This endpoint returns a list of Accounts.</returns>
     [HttpGet]
     [EndpointDescription("Historique des conversations de l'utilisateur exécutant la requête")]
+    [ProducesResponseType(typeof(ActionResult<List<ConversationDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<List<ConversationDto>>> GetHistoricByUser()
     {
         return Ok(await Mediator.Send(new GetHistoricOfConversationByCurrentUser()));

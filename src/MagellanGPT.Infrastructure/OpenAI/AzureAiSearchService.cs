@@ -4,6 +4,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.SemanticKernel.Connectors.AzureAISearch;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Memory;
+using Microsoft.SemanticKernel.Text;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace MagellanGPT.Infrastructure.OpenAI;
 
@@ -83,10 +85,19 @@ public class AzureAiSearchService : IAzureAiSearchService
         Console.WriteLine("----------------------");
     }
 
-    // Returns token cost of embeddings
+    /// <summary>
+    /// Returns token cost of embeddings
+    /// </summary>
+    /// <param name="documentKey"></param>
+    /// <param name="documentValue"></param>
+    /// <returns></returns>
     private async Task<int> StoreMemoryRecordAsync(string documentKey, string documentValue)
     {
         (ReadOnlyMemory<float> EmbeddingArray, int TotalTokens) response = await _openAIService.GetEmbeddingsAsync(documentValue);
+
+#pragma warning disable SKEXP0055
+        var lines = TextChunker.SplitPlainTextLines(documentValue, 40);
+        var paragraphs = TextChunker.SplitPlainTextParagraphs(lines, 120);
 
         var memoryRecordMetadata = new MemoryRecordMetadata(true, documentKey, documentKey, documentValue, string.Empty, string.Empty);
 
