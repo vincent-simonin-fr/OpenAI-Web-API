@@ -21,7 +21,7 @@ public class GetHistoricOfConversationByCurrentUserHandler : IRequestHandler<Get
 
     public async Task<IEnumerable<ConversationDto>> Handle(GetHistoricOfConversationByCurrentUser request, CancellationToken cancellationToken)
     {
-        var conversation = _context.Conversations.Where(conversation => conversation.Id == "13").ToList();
+        var conversation = _context.Conversations.Where(conversation => conversation.Id == "16").ToList();
 
         return conversation.AsQueryable().Select(ConversationDto.Projection).ToList();
     }

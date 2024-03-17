@@ -16,12 +16,12 @@ public record CreateAICompletionSynchronously : IRequest<ResponseDto>
 
 public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICompletionSynchronously, ResponseDto>
 {
-    private readonly IOpenAIService _openAIService;
+    private readonly IOpenAIService _openAiService;
     private readonly IApplicationDbContext _context;
 
     public CreateAICompletionSynchronouslyHandler(IOpenAIService openAIService, IApplicationDbContext context)
     {
-        _openAIService = openAIService;
+        _openAiService = openAIService;
         _context = context;
     }
 
@@ -39,7 +39,7 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
     {
         var initialization = InitializeConversation(request);
 
-        var conversation = await _openAIService.ProcessDemandSynchronously(initialization.Conversation);
+        await _openAiService.ProcessDemandSynchronously(initialization.Conversation);
 
         initialization.Conversation = await StoreDialog(initialization.Conversation, initialization.IsExistingConversation, cancellationToken);
 

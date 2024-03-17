@@ -9,6 +9,7 @@ public class ConversationDto
     public string ConversationId { get; set; }
     public List<DialogDto> Dialogs { get; set; }
     public int? Tokens { get; set; }
+    public string Title { get; set; }
 
     public static Expression<Func<Conversation, ConversationDto>> Projection { get; } = conversation
             => new ConversationDto
@@ -17,6 +18,7 @@ public class ConversationDto
                 ConversationId = conversation.ConversationId,
                 Dialogs = conversation.Dialogs!.AsQueryable().Select(DialogDto.Projection).ToList(),
                 Tokens = conversation.Tokens,
+                Title = conversation.Title ?? "",
             };
 
     public static ConversationDto FromEntity(Conversation conversation)
