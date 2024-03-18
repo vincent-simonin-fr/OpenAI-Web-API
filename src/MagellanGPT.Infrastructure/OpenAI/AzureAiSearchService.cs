@@ -19,6 +19,7 @@ public class AzureAiSearchService : IAzureAiSearchService
 {
     private const string MemoryCollectionName = "SKOrganization";
 
+#pragma warning disable SKEXP0001
 #pragma warning disable SKEXP0003
     private readonly ISemanticTextMemory _memory;
 
@@ -35,7 +36,9 @@ public class AzureAiSearchService : IAzureAiSearchService
 
 #pragma warning disable SKEXP0003
 #pragma warning disable SKEXP0011
+#pragma warning disable SKEXP0010
 #pragma warning disable SKEXP0021
+#pragma warning disable SKEXP0001
         _memory = new MemoryBuilder()
             .WithAzureOpenAITextEmbeddingGeneration("text-embedding-ada-002", openAiEndpoint, openAiKey)
             .WithMemoryStore(new AzureAISearchMemoryStore(aiSearchEndpoint, aiSearchKey))
@@ -70,6 +73,7 @@ public class AzureAiSearchService : IAzureAiSearchService
     /// <returns></returns>
     public async Task SearchMemoryAsync(string query)
     {
+#pragma warning disable SKEXP0001
         var memoryResults = _memory.SearchAsync(MemoryCollectionName, query, limit: 2, minRelevanceScore: 0.5);
 
         int i = 0;
@@ -96,10 +100,11 @@ public class AzureAiSearchService : IAzureAiSearchService
         (ReadOnlyMemory<float> EmbeddingArray, int TotalTokens) response = await _openAIService.GetEmbeddingsAsync(documentValue);
 
 #pragma warning disable SKEXP0055
-        var lines = TextChunker.SplitPlainTextLines(documentValue, 40);
-        var paragraphs = TextChunker.SplitPlainTextParagraphs(lines, 120);
+#pragma warning disable SKEXP0001
+        //var lines = TextChunker.SplitPlainTextLines(documentValue, 40);
+        //var paragraphs = TextChunker.SplitPlainTextParagraphs(lines, 120);
 
-        var memoryRecordMetadata = new MemoryRecordMetadata(true, documentKey, documentKey, documentValue, string.Empty, string.Empty);
+        var memoryRecordMetadata = new MemoryRecordMetadata(true, documentKey, documentValue, documentValue.Substring(0,100), string.Empty, string.Empty);
 
         var memoryRecord = new MemoryRecord(memoryRecordMetadata, response.EmbeddingArray, documentKey, DateTimeOffset.UtcNow);
 
