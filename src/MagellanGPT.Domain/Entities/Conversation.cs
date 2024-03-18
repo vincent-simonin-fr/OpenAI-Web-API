@@ -8,6 +8,6 @@ public class Conversation
     public List<Dialog>? Dialogs { get; set; } = new List<Dialog>();
     public string LlmDeploymentName { get; set; }
     public int? Tokens { get; set; }
-
+    public string? SystemPromt { get; set; }
 
 }

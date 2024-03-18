@@ -12,6 +12,7 @@ public record CreateAICompletionSynchronously : IRequest<ResponseDto>
     public string? ConversationId { get; set; }
     public string? LlmDeploymentName { get; set; } = "ChatGPT35Turbo";
     public required string Demand { get; set; }
+    public string? SystemPrompt { get; set; }
 }
 
 public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICompletionSynchronously, ResponseDto>
@@ -43,6 +44,8 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
 
         var initialization = InitializeConversation(request);
 
+        if (request.SystemPrompt is not null) initialization.Conversation.SystemPromt = request.SystemPrompt;
+
         await _openAiService.ProcessDemandSynchronously(initialization.Conversation);
 
         initialization.Conversation = await StoreDialog(initialization.Conversation, initialization.IsExistingConversation, cancellationToken);
@@ -59,7 +62,7 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
 
     private (Conversation Conversation, bool IsExistingConversation) InitializeConversation(CreateAICompletionSynchronously request)
     {
-        Conversation? conversation = request.ConversationId is null ? _context.Conversations.FirstOrDefault(c => c.Id == request.UserId && c.ConversationId == request.ConversationId) : null;
+        Conversation? conversation = request.ConversationId is not null ? _context.Conversations.FirstOrDefault(c => c.Id == request.UserId && c.ConversationId == request.ConversationId) : null;
         bool isExistingConversation;
         if (conversation is not null)
         {
@@ -82,7 +85,6 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
                 Id = request.UserId!,
                 ConversationId = Guid.NewGuid().ToString(),
                 LlmDeploymentName = request.LlmDeploymentName!,
-                Title = "WIP",
                 Dialogs = new List<Dialog> { new Dialog
                 {
                     Question = request.Demand,
