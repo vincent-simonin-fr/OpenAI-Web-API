@@ -8,8 +8,8 @@ namespace MagellanGPT.Application.ChatbotUseCasesCommands;
 // [Authorize(Roles = "user")]
 public record CreateAICompletionSynchronously : IRequest<ResponseDto>
 {
-    public string? UserId { get; set; } = "16";
-    public string? ConversationId { get; set; } = "bc029032-c074-408b-af71-49d0d57df506";
+    public string? UserId { get; set; }
+    public string? ConversationId { get; set; }
     public string? LlmDeploymentName { get; set; } = "ChatGPT35Turbo";
     public required string Demand { get; set; }
 }
@@ -18,11 +18,13 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
 {
     private readonly IOpenAIService _openAiService;
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUserService;
 
-    public CreateAICompletionSynchronouslyHandler(IOpenAIService openAIService, IApplicationDbContext context)
+    public CreateAICompletionSynchronouslyHandler(IOpenAIService openAIService, IApplicationDbContext context, ICurrentUserService currentUserService)
     {
         _openAiService = openAIService;
         _context = context;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -37,6 +39,8 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
     /// <returns></returns>
     public async Task<ResponseDto> Handle(CreateAICompletionSynchronously request, CancellationToken cancellationToken)
     {
+        request.UserId = _currentUserService.UserId;
+
         var initialization = InitializeConversation(request);
 
         await _openAiService.ProcessDemandSynchronously(initialization.Conversation);
@@ -55,7 +59,7 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
 
     private (Conversation Conversation, bool IsExistingConversation) InitializeConversation(CreateAICompletionSynchronously request)
     {
-        Conversation conversation = _context.Conversations.FirstOrDefault(c => c.Id == request.UserId && c.ConversationId == request.ConversationId);
+        Conversation? conversation = request.ConversationId is null ? _context.Conversations.FirstOrDefault(c => c.Id == request.UserId && c.ConversationId == request.ConversationId) : null;
         bool isExistingConversation;
         if (conversation is not null)
         {

@@ -15,14 +15,15 @@ public class ChatBotUseCasesTests
     private Mock<IOpenAIService> _openAiService;
     private CreateAICompletionSynchronouslyHandler _createAICompletionSynchronouslyHandler;
     private CreateAICompletionSynchronously _createAICompletionSynchronously;
+    private Mock<ICurrentUserService> _currentUserService;
 
     [SetUp]
     public void Setup()
     {
         _dbContext = new();
         _openAiService = new();
-
-        _createAICompletionSynchronouslyHandler = new(_openAiService.Object, _dbContext.Object);
+        _currentUserService = new();
+        _createAICompletionSynchronouslyHandler = new(_openAiService.Object, _dbContext.Object, _currentUserService.Object);
     }
 
     [Test]

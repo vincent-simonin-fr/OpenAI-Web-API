@@ -2,7 +2,6 @@
 using System.Text;
 using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Application.Common.Models;
-using MagellanGPT.Application.Common.Security;
 using MagellanGPT.Domain.Entities;
 using MediatR;
 using Microsoft.KernelMemory.DataFormats;
@@ -15,8 +14,8 @@ namespace MagellanGPT.Application.RAGUseCases.Commands;
 // [Authorize(Roles = "user")]
 public record CreateAICompletionWithMemorizePDfFiles : IRequest<ResponseDto>
 {
-    public string? UserId { get; set; } = "16";
-    public string? ConversationId { get; set; } = "bc029032-c074-408b-af71-49d0d57df506";
+    public string? UserId { get; set; }
+    public string? ConversationId { get; set; }
     public string? LlmDeploymentName { get; set; } = "ChatGPT35Turbo";
     public required List<string>? FilePathList { get; set; }
     public string Demand { get; set; }
@@ -26,13 +25,13 @@ public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<Cre
 {
     private readonly IOpenAIService _openAIService;
     private readonly IAzureAiSearchService _azureAiSearchService;
-    private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUserService;
 
-    public CreateAICompletionWithMemorizePDfFilesHandler(IApplicationDbContext context, IOpenAIService openAIService, IAzureAiSearchService azureAiSearchService)
+    public CreateAICompletionWithMemorizePDfFilesHandler(IOpenAIService openAIService, IAzureAiSearchService azureAiSearchService, ICurrentUserService currentUserService)
     {
-        _context = context;
         _openAIService = openAIService;
         _azureAiSearchService = azureAiSearchService;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -49,6 +48,8 @@ public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<Cre
     /// <returns>Task<IAsyncEnumerable<StreamingChatCompletionsUpdate>></returns>
     public async Task<ResponseDto> Handle(CreateAICompletionWithMemorizePDfFiles request, CancellationToken cancellationToken)
     {
+        request.UserId = _currentUserService.UserId;
+
         var conversation = InitializeConversation(request);
 
         // Traitement des PDF

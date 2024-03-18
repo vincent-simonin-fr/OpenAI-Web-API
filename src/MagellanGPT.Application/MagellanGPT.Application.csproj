@@ -14,7 +14,6 @@
     <None Remove="Common\Models\" />
     <None Remove="Common\Security\" />
     <None Remove="ChatbotUseCases\" />
-    <None Remove="ChatbotUseCases\Queries\" />
     <None Remove="ChatbotUseCases\Commands\" />
     <None Remove="ChatbotUseCases\Commands\CreateAICompletion\" />
     <None Remove="RagUseCases\Queries\" />
@@ -28,7 +27,6 @@
     <Folder Include="Common\Models\" />
     <Folder Include="Common\Security\" />
     <Folder Include="ChatbotUseCases\" />
-    <Folder Include="ChatbotUseCases\Queries\" />
     <Folder Include="ChatbotUseCases\Commands\" />
     <Folder Include="ChatbotUseCases\Commands\CreateAICompletion\" />
     <Folder Include="RagUseCases\Queries\" />

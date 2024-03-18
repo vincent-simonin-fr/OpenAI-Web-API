@@ -1,6 +1,7 @@
 ﻿using Azure;
 using Azure.AI.OpenAI;
 using MagellanGPT.Application.Common.Interfaces;
+using MagellanGPT.Application.Common.Models;
 using MagellanGPT.Domain.Entities;
 using MagellanGPT.Infrastructure.KeyVault;
 using Microsoft.Extensions.Configuration;
@@ -230,10 +231,9 @@ public class OpenAIService : IOpenAIService
         return (embeddingArray, totalTokens);
     }
 
-    public async Task<Dictionary<string, Embeddings>> GetEmbeddingsAsync2(string document)
+    public async Task<Dictionary<int, EmbeddingsDto>> GetEmbeddingsAsync2(string document)
     {
-        var embeddings = new Dictionary<string, Embeddings>();
-
+        var embeddings = new Dictionary<int, EmbeddingsDto>();
 #pragma warning disable SKEXP0055
 #pragma warning disable SKEXP0050
         var lines = TextChunker.SplitPlainTextLines(document, 40);
@@ -241,7 +241,7 @@ public class OpenAIService : IOpenAIService
 
         var index = 1;
 
-        paragraphs.ForEach(async (paragraph) =>
+        paragraphs.ForEach((paragraph) =>
         {
             EmbeddingsOptions embeddingOptions = new()
             {
@@ -251,15 +251,16 @@ public class OpenAIService : IOpenAIService
 
             try
             {
-                var returnValue = await _client.GetEmbeddingsAsync(embeddingOptions);
+                var returnValue = _client.GetEmbeddings(embeddingOptions);
+                embeddings.Add(index, new EmbeddingsDto() { Text = paragraph, Embeddings = returnValue.Value });
 
-                embeddings.Add(paragraph, returnValue.Value);
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 Console.WriteLine(ex);
-            }
+                }
 
-
+            index++;
         });
 
         return embeddings;
