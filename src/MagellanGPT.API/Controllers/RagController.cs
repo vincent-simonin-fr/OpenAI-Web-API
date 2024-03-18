@@ -18,7 +18,7 @@ public class RagController : ApiControllerBase
         {
             if (formFile.Length > 0)
             {
-                var filePath = $"./Files/{Path.GetRandomFileName()}-user.pdf";
+                var filePath = $"./Files/{formFile.FileName}.pdf";
 
                 using (var stream = System.IO.File.Create(filePath))
                 {

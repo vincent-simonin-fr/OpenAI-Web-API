@@ -52,11 +52,11 @@ public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<Cre
         var conversation = InitializeConversation(request);
 
         // Traitement des PDF
-        var documents = await ProcessAndStorePdf(request.FilePathList);
+        var process = await ProcessAndStorePdf(request.FilePathList);
         var documentsIds = new List<string>();
 
         StringBuilder document = new();
-        foreach(var doc in documents)
+        foreach(var doc in process.Documents)
         {
             document.Append(doc.Value);
             documentsIds.Add(doc.Key);
@@ -72,10 +72,11 @@ public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<Cre
             Answer = conversation.Dialogs![^1].Answer,
             Tokens = (int)conversation.Dialogs![^1].TokensRequest!
             + (int)conversation.Dialogs![^1].TokensResponse!
+            + process.TotalTokens
         };
     }
 
-    private async Task<Dictionary<string, string>> ProcessAndStorePdf(List<string> filePathList)
+    private async Task<(Dictionary<string, string> Documents, int TotalTokens)> ProcessAndStorePdf(List<string> filePathList)
     {
         FileContent content = new();
         StringBuilder document = new();
@@ -83,22 +84,23 @@ public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<Cre
         var documents = new Dictionary<string, string>();
 
         var index = 1;
-        filePathList.ForEach(file => {
-            content = new PdfDecoder().ExtractContent(file);
-            document.Append($"Document N°{index}");
+        filePathList.ForEach(filename => {
+            content = new PdfDecoder().ExtractContent(filename);
+            document.Append("-----");
+            document.Append($"{filename}-{index}");
             foreach (FileSection section in content.Sections)
             {
                 document.Append($"Page: {section.Number}/{content.Sections.Count}");
                 document.Append(section.Content);
                 document.Append("-----");
             }
-            documents.Add(Guid.NewGuid().ToString(), document.ToString());
+            documents.Add(filename, document.ToString());
             index++;
         });
        
         var tokenCost = await _azureAiSearchService.StoreAsync(documents);
 
-        return documents;
+        return (documents, tokenCost);
     }
 
     private Conversation InitializeConversation(CreateAICompletionWithMemorizePDfFiles request)

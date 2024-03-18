@@ -4,7 +4,7 @@ using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Domain.Entities;
 using MagellanGPT.Infrastructure.KeyVault;
 using Microsoft.Extensions.Configuration;
-using Microsoft.VisualBasic;
+using Microsoft.SemanticKernel.Text;
 
 namespace MagellanGPT.Infrastructure.OpenAI;
 
@@ -188,6 +188,28 @@ public class OpenAIService : IOpenAIService
 
     public async Task<(ReadOnlyMemory<float> EmbeddingArray, int TotalTokens)> GetEmbeddingsAsync(string document)
     {
+        var embeddings = new Dictionary<int, Embeddings>();
+
+#pragma warning disable SKEXP0055
+#pragma warning disable SKEXP0050
+        var lines = TextChunker.SplitPlainTextLines(document, 40);
+        var paragraphs = TextChunker.SplitPlainTextParagraphs(lines, 120);
+
+        var index = 1;
+
+        paragraphs.ForEach(async (paragraph) =>
+        {
+            EmbeddingsOptions embeddingOptions = new()
+            {
+                DeploymentName = "text-embedding-ada-002",
+                Input = { paragraph },
+            };
+
+            var returnValue = await _client.GetEmbeddingsAsync(embeddingOptions);
+
+            embeddings.Add(index , returnValue.Value);
+        });
+
         EmbeddingsOptions embeddingOptions = new()
         {
             DeploymentName = "text-embedding-ada-002",
@@ -195,6 +217,7 @@ public class OpenAIService : IOpenAIService
         };
 
         var returnValue = await _client.GetEmbeddingsAsync(embeddingOptions);
+
 
         var totalTokens = returnValue.Value.Usage.TotalTokens;
         var embeddingArray = returnValue.Value.Data[0].Embedding;
@@ -205,6 +228,41 @@ public class OpenAIService : IOpenAIService
         }
 
         return (embeddingArray, totalTokens);
+    }
+
+    public async Task<Dictionary<string, Embeddings>> GetEmbeddingsAsync2(string document)
+    {
+        var embeddings = new Dictionary<string, Embeddings>();
+
+#pragma warning disable SKEXP0055
+#pragma warning disable SKEXP0050
+        var lines = TextChunker.SplitPlainTextLines(document, 40);
+        var paragraphs = TextChunker.SplitPlainTextParagraphs(lines, 120);
+
+        var index = 1;
+
+        paragraphs.ForEach(async (paragraph) =>
+        {
+            EmbeddingsOptions embeddingOptions = new()
+            {
+                DeploymentName = "text-embedding-ada-002",
+                Input = { paragraph },
+            };
+
+            try
+            {
+                var returnValue = await _client.GetEmbeddingsAsync(embeddingOptions);
+
+                embeddings.Add(paragraph, returnValue.Value);
+            }catch(Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+
+
+        });
+
+        return embeddings;
     }
 }
 

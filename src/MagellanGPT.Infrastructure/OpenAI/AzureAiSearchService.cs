@@ -1,6 +1,9 @@
-﻿using MagellanGPT.Application.Common.Interfaces;
+﻿using System;
+using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Infrastructure.KeyVault;
 using Microsoft.Extensions.Configuration;
+using Microsoft.KernelMemory;
+using Microsoft.KernelMemory.AI;
 using Microsoft.SemanticKernel.Connectors.AzureAISearch;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Memory;
@@ -17,10 +20,12 @@ namespace MagellanGPT.Infrastructure.OpenAI;
 /// </summary>
 public class AzureAiSearchService : IAzureAiSearchService
 {
-    private const string MemoryCollectionName = "SKOrganization";
+    private const string MemoryCollectionName = "SKMagellanGPT";
 
+#pragma warning disable SKEXP0001
 #pragma warning disable SKEXP0003
     private readonly ISemanticTextMemory _memory;
+    private readonly IKernelMemory _kernelMemory;
 
 #pragma warning disable SKEXP0021
     private readonly AzureAISearchMemoryStore _azureAISearchMemoryStore;
@@ -35,11 +40,30 @@ public class AzureAiSearchService : IAzureAiSearchService
 
 #pragma warning disable SKEXP0003
 #pragma warning disable SKEXP0011
+#pragma warning disable SKEXP0010
 #pragma warning disable SKEXP0021
         _memory = new MemoryBuilder()
             .WithAzureOpenAITextEmbeddingGeneration("text-embedding-ada-002", openAiEndpoint, openAiKey)
             .WithMemoryStore(new AzureAISearchMemoryStore(aiSearchEndpoint, aiSearchKey))
             .Build();
+
+        _kernelMemory = new KernelMemoryBuilder()
+            .WithAzureOpenAITextEmbeddingGeneration(new AzureOpenAIConfig()
+            {
+                Endpoint = openAiEndpoint,
+                APIKey = openAiKey,
+                Deployment = "text-embedding-ada-002",
+                APIType = AzureOpenAIConfig.APITypes.EmbeddingGeneration,
+                MaxTokenTotal = 4000,
+                Auth = AzureOpenAIConfig.AuthTypes.APIKey
+            })
+            .WithAzureAISearchMemoryDb(new AzureAISearchConfig()
+            {
+                Endpoint = aiSearchEndpoint,
+                APIKey = aiSearchKey,
+                Auth = AzureAISearchConfig.AuthTypes.APIKey
+            })
+            .Build<MemoryServerless>();
 
         _openAIService = openAIService;
         _azureAISearchMemoryStore = new AzureAISearchMemoryStore(aiSearchEndpoint, aiSearchKey);
@@ -50,13 +74,6 @@ public class AzureAiSearchService : IAzureAiSearchService
         int tokenCost = 0;
         foreach (var doc in documents)
         {
-            //var docId = await _memory.SaveReferenceAsync(
-            //    collection: MemoryCollectionName,
-            //    externalSourceName: "Organization",
-            //    externalId: doc.Key,
-            //    description: doc.Value,
-            //    text: doc.Value);
-
             tokenCost += StoreMemoryRecordAsync(doc.Key, doc.Value).Result;
         }
 
@@ -91,21 +108,48 @@ public class AzureAiSearchService : IAzureAiSearchService
     /// <param name="documentKey"></param>
     /// <param name="documentValue"></param>
     /// <returns></returns>
+    //private async Task<int> StoreMemoryRecordAsync(string documentKey, string documentValue)
+    //{
+    //    (ReadOnlyMemory<float> EmbeddingArray, int TotalTokens) response = await _openAIService.GetEmbeddingsAsync(documentValue);
+
+    //    var embeddings = await _openAIService.GetEmbeddingsAsync2(documentValue);
+
+    //    var memoryRecordMetadata = new MemoryRecordMetadata(true, documentKey, documentKey, documentValue, string.Empty, string.Empty);
+
+    //    var memoryRecord = new MemoryRecord(memoryRecordMetadata, response.EmbeddingArray, documentKey, DateTimeOffset.UtcNow);
+
+    //    await _azureAISearchMemoryStore.UpsertAsync(MemoryCollectionName, memoryRecord);
+
+    //    return response.TotalTokens;
+    //}
+
+    /// <summary>
+    /// Memorization
+    /// </summary>
+    /// <param name="documentKey"></param>
+    /// <param name="documentValue"></param>
+    /// <returns>Returns token cost of embeddings</returns>
     private async Task<int> StoreMemoryRecordAsync(string documentKey, string documentValue)
     {
-        (ReadOnlyMemory<float> EmbeddingArray, int TotalTokens) response = await _openAIService.GetEmbeddingsAsync(documentValue);
+        await _kernelMemory.ImportTextAsync(documentValue);
+        var statement = "Lucy flied by an asteroid";
+        var verification = await _kernelMemory.AskAsync(statement);
 
-#pragma warning disable SKEXP0055
-        var lines = TextChunker.SplitPlainTextLines(documentValue, 40);
-        var paragraphs = TextChunker.SplitPlainTextParagraphs(lines, 120);
+        var embeddings = await _openAIService.GetEmbeddingsAsync2(documentValue);
+        var totalTokens = 0;
 
-        var memoryRecordMetadata = new MemoryRecordMetadata(true, documentKey, documentKey, documentValue, string.Empty, string.Empty);
+        foreach (var embedding in embeddings)
+        {
+            var memoryRecordMetadata = new MemoryRecordMetadata(true, documentKey, embedding.Key, documentValue.Substring(0, 100), string.Empty, string.Empty);
 
-        var memoryRecord = new MemoryRecord(memoryRecordMetadata, response.EmbeddingArray, documentKey, DateTimeOffset.UtcNow);
+            var memoryRecord = new MemoryRecord(memoryRecordMetadata, embedding.Value.Data[0].Embedding, documentKey, DateTimeOffset.UtcNow);
 
-        await _azureAISearchMemoryStore.UpsertAsync(MemoryCollectionName, memoryRecord);
+            await _azureAISearchMemoryStore.UpsertAsync(MemoryCollectionName, memoryRecord);
 
-        return response.TotalTokens;
+            totalTokens += embedding.Value.Usage.TotalTokens;
+        }
+
+        return totalTokens;
     }
 }
 
