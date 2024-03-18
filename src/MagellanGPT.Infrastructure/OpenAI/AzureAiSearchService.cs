@@ -1,15 +1,10 @@
-﻿using System;
-using MagellanGPT.Application.Common.Interfaces;
+﻿using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Infrastructure.KeyVault;
 using Microsoft.Extensions.Configuration;
 using Microsoft.KernelMemory;
-using Microsoft.KernelMemory.AI;
-using Microsoft.KernelMemory.MemoryStorage;
 using Microsoft.SemanticKernel.Connectors.AzureAISearch;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Memory;
-using Microsoft.SemanticKernel.Text;
-using static System.Net.Mime.MediaTypeNames;
 using MemoryRecord = Microsoft.SemanticKernel.Memory.MemoryRecord;
 
 namespace MagellanGPT.Infrastructure.OpenAI;

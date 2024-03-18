@@ -13,15 +13,17 @@ public record GetHistoricOfConversationByCurrentUser : IRequest<IEnumerable<Conv
 public class GetHistoricOfConversationByCurrentUserHandler : IRequestHandler<GetHistoricOfConversationByCurrentUser, IEnumerable<ConversationDto>>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetHistoricOfConversationByCurrentUserHandler(IApplicationDbContext context)
+    public GetHistoricOfConversationByCurrentUserHandler(IApplicationDbContext context, ICurrentUserService currentUserService)
     {
         _context = context;
+        _currentUserService = currentUserService;
     }
 
     public async Task<IEnumerable<ConversationDto>> Handle(GetHistoricOfConversationByCurrentUser request, CancellationToken cancellationToken)
     {
-        var conversation = _context.Conversations.Where(conversation => conversation.Id == "16").ToList();
+        var conversation = _context.Conversations.Where(conversation => conversation.Id == _currentUserService.UserId).ToList();
 
         return conversation.AsQueryable().Select(ConversationDto.Projection).ToList();
     }
