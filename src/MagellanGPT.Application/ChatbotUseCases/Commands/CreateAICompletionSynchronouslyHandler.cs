@@ -62,11 +62,11 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
 
     private async Task<(Conversation Conversation, User User, bool IsExistingConversation)> InitializeConversation(CreateAICompletionSynchronously request, CancellationToken cancellationToken)
     {
-        var user = _context.User.FirstOrDefault(user => user.ObjectId == _currentUserService.UserId);
+        var user = _currentUserService.UserId is not null ? _context.User.FirstOrDefault(user => user.ObjectId == _currentUserService.UserId) : null;
 
         if (user is null)
         {
-            user = new User(_currentUserService.UserId);
+            user = new User(_currentUserService.UserId ?? "fd285508-8ba1-4064-be24-30dfdea0b376");
             _context.User.Add(user);
             await _context.SaveChangesAsync(cancellationToken);
         }
