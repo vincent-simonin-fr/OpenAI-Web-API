@@ -2,7 +2,6 @@
 using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Application.Common.Models;
 using MagellanGPT.Domain.Entities;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 
@@ -75,7 +74,7 @@ public class ChatBotUseCasesTests
         demands.ForEach(demand =>
         {
             // Act
-            _createAICompletionSynchronously = new() { Demand = demand, UserId = "fd285508-8ba1-4064-be24-30dfdea0b376" };
+            _createAICompletionSynchronously = new() { Demand = demand };
 
             var mockDbSetConversation = GetDbSetMockedOf<Conversation>();
             var mockDbSetUser = GetDbSetMockedOf<User>();

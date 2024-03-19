@@ -42,31 +42,6 @@ The Shared Layer consists of common utilities, helper functions, and shared serv
 - ASP.NET Core 8.0  
 - Visual Studio or VS Code & IIS Express
 
-
-## Database Migration
-1. Clic droit sur le projet API, pour sélectionner gérer les secrets utilisateur et ajouter une chaîne de connexion correspondant à votre serveur de base de données Sql Server :  
-Exemple :
-```
-{
-    "ConnectionStrings": {
-        "DefaultConnection": "YourConnectionStringToCosomosDb"
-    }
-}
-```
-
-2. `dotnet ef migrations add Init --project src/MagellanGPT.Infrastructure --startup-project src/MagellanGPT.API --output-dir Persistence/Migrations`  
-   and  
-   `dotnet ef database update --project src/MagellanGPT.Infrastructure --startup-project src/MagellanGPT.API`  
-   in project root  
-3. Start all projects
-
-## Code quality analysis
-Use SonarQube image with docker - sonar:lts-community
-```bash
-docker run -d --name sonarqube -p 9000:9000 -p 9092:9092 sonarqube
-docker run -ti -v $(pwd):/root/src --link sonarqube newtmitch/sonar-scanner
-```
-
 Go to http://localhost:9000
 User: admin
 Password: admin
