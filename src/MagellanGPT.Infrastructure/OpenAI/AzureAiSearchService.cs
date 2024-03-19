@@ -44,6 +44,17 @@ public class AzureAiSearchService : IAzureAiSearchService
             .WithMemoryStore(new AzureAISearchMemoryStore(aiSearchEndpoint, aiSearchKey))
             .Build();
 
+        var azureOpenAiConfig = new AzureOpenAIConfig()
+        {
+            Endpoint = openAiEndpoint,
+            APIKey = openAiKey,
+            Deployment = "text-embedding-ada-002",
+            APIType = AzureOpenAIConfig.APITypes.EmbeddingGeneration,
+            MaxTokenTotal = 4000,
+            Auth = AzureOpenAIConfig.AuthTypes.APIKey
+        };
+
+        // https://github.com/microsoft/kernel-memory/blob/main/service/Core/Configuration/KernelMemoryConfig.cs
         //_kernelMemory = new KernelMemoryBuilder()
         //    .WithAzureOpenAITextEmbeddingGeneration(new AzureOpenAIConfig()
         //    {
@@ -60,7 +71,12 @@ public class AzureAiSearchService : IAzureAiSearchService
         //        APIKey = aiSearchKey,
         //        Auth = AzureAISearchConfig.AuthTypes.APIKey
         //    })
-        //    .Build<MemoryServerless>();
+        //    .WithOpenAITextGeneration(new OpenAIConfig
+        //    {
+        //        APIKey = openAiKey,
+        //        EmbeddingModel = 
+        //    })
+        //    .Build();
 
         _openAIService = openAIService;
         _azureAISearchMemoryStore = new AzureAISearchMemoryStore(aiSearchEndpoint, aiSearchKey);

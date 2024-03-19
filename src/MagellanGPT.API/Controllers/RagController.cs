@@ -18,7 +18,7 @@ public class RagController : ApiControllerBase
         {
             if (formFile.Length > 0)
             {
-                var filePath = $"./Files/{formFile.FileName}";
+                var filePath = $"wwwroot/Files/{formFile.FileName}";
 
                 using (var stream = System.IO.File.Create(filePath))
                 {
