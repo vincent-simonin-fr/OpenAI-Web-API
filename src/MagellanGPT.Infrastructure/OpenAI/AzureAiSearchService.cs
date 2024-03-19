@@ -19,6 +19,7 @@ namespace MagellanGPT.Infrastructure.OpenAI;
 public class AzureAiSearchService : IAzureAiSearchService
 {
     private const string MemoryCollectionName = "SKMagellanGPT1";
+    private readonly string _azureBlobStorageConnectionString;
 
 #pragma warning disable SKEXP0001
 #pragma warning disable SKEXP0003
@@ -35,6 +36,7 @@ public class AzureAiSearchService : IAzureAiSearchService
         var openAiKey = SecretManager.GetInstance().OpenAiKey;
         var aiSearchEndpoint = configuration.GetSection("AiSearch:Endpoint").Value!;
         var aiSearchKey = SecretManager.GetInstance().AiSearchKey;
+        _azureBlobStorageConnectionString = configuration.GetSection("AzureBlobStorage:ConnectionString").Value!;
 
 #pragma warning disable SKEXP0003
 #pragma warning disable SKEXP0011
@@ -72,7 +74,7 @@ public class AzureAiSearchService : IAzureAiSearchService
             })
             .WithAzureBlobsStorage(new AzureBlobsConfig
             {
-                ConnectionString = "DefaultEndpointsProtocol=https;AccountName=documentsmagellangpt;AccountKey=RPxGRLJn53YWMtix6sGk9E8L+YZ+kgwNkNQW4KC6f7HkK1b3J9qErXPANCSS/Og+DGkjne0ZKJra+ASt/vU8+A==;EndpointSuffix=core.windows.net",
+                ConnectionString = $"DefaultEndpointsProtocol=https;{_azureBlobStorageConnectionString}",
                 Container = "documents",
                 Auth = AzureBlobsConfig.AuthTypes.ConnectionString
             })
@@ -155,7 +157,6 @@ public class AzureAiSearchService : IAzureAiSearchService
     {
         // var test = await _kernelMemory.ImportTextAsync(documentValue);
         // var tes = await _kernelMemory.ImportDocumentAsync("wwwroot/Files/legateauauchocolatdepierreherme.pdf", index: "document");
-
         var embeddingsDict = await _openAIService.GetEmbeddings(documentValue);
         var totalTokens = 0;
         var index = 0;
