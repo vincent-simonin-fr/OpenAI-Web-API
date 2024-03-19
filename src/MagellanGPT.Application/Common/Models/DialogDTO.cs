@@ -8,6 +8,7 @@ public class DialogDto
     public string? Question { get; set; }
     public string? Answer { get; set; }
     public int? Tokens { get; set; }
+    public string? LlmDeploymentName { get; set; }
     public DateTime CreatedAt { get; set; }
 
     public static Expression<Func<Dialog, DialogDto>> Projection { get; } = dialog
@@ -15,7 +16,8 @@ public class DialogDto
             {
                 Question = dialog.Question,
                 Answer = dialog.Answer,
-                Tokens = dialog.TokensRequest + dialog.TokensResponse + dialog.TokensDocumentProcessing,
+                LlmDeploymentName = dialog.LlmDeploymentName,
+                Tokens = dialog.TokensRequest + dialog.TokensResponse,
                 CreatedAt = dialog.CreatedAt
             };
 

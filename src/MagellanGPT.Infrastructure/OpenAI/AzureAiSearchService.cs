@@ -2,6 +2,7 @@
 using MagellanGPT.Infrastructure.KeyVault;
 using Microsoft.Extensions.Configuration;
 using Microsoft.KernelMemory;
+using Microsoft.KernelMemory.Configuration;
 using Microsoft.SemanticKernel.Connectors.AzureAISearch;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Memory;
@@ -44,39 +45,44 @@ public class AzureAiSearchService : IAzureAiSearchService
             .WithMemoryStore(new AzureAISearchMemoryStore(aiSearchEndpoint, aiSearchKey))
             .Build();
 
-        var azureOpenAiConfig = new AzureOpenAIConfig()
-        {
-            Endpoint = openAiEndpoint,
-            APIKey = openAiKey,
-            Deployment = "text-embedding-ada-002",
-            APIType = AzureOpenAIConfig.APITypes.EmbeddingGeneration,
-            MaxTokenTotal = 4000,
-            Auth = AzureOpenAIConfig.AuthTypes.APIKey
-        };
-
         // https://github.com/microsoft/kernel-memory/blob/main/service/Core/Configuration/KernelMemoryConfig.cs
-        //_kernelMemory = new KernelMemoryBuilder()
-        //    .WithAzureOpenAITextEmbeddingGeneration(new AzureOpenAIConfig()
-        //    {
-        //        Endpoint = openAiEndpoint,
-        //        APIKey = openAiKey,
-        //        Deployment = "text-embedding-ada-002",
-        //        APIType = AzureOpenAIConfig.APITypes.EmbeddingGeneration,
-        //        MaxTokenTotal = 4000,
-        //        Auth = AzureOpenAIConfig.AuthTypes.APIKey
-        //    })
-        //    .WithAzureAISearchMemoryDb(new AzureAISearchConfig()
-        //    {
-        //        Endpoint = aiSearchEndpoint,
-        //        APIKey = aiSearchKey,
-        //        Auth = AzureAISearchConfig.AuthTypes.APIKey
-        //    })
-        //    .WithOpenAITextGeneration(new OpenAIConfig
-        //    {
-        //        APIKey = openAiKey,
-        //        EmbeddingModel = 
-        //    })
-        //    .Build();
+        _kernelMemory = new KernelMemoryBuilder()
+            .WithAzureOpenAITextEmbeddingGeneration(new AzureOpenAIConfig
+            {
+                Endpoint = openAiEndpoint,
+                APIKey = openAiKey,
+                Deployment = "text-embedding-ada-002",
+                APIType = AzureOpenAIConfig.APITypes.EmbeddingGeneration,
+                MaxTokenTotal = 10000,
+                Auth = AzureOpenAIConfig.AuthTypes.APIKey
+            })
+            .WithAzureAISearchMemoryDb(new AzureAISearchConfig
+            {
+                Endpoint = aiSearchEndpoint,
+                APIKey = aiSearchKey,
+                Auth = AzureAISearchConfig.AuthTypes.APIKey,
+            })
+            .WithOpenAITextGeneration(new OpenAIConfig
+            {
+                APIKey = openAiKey,
+                EmbeddingModel = "text-embedding-ada-002",
+                TextModel = "ChatGPT35Turbo",
+                EmbeddingModelMaxTokenTotal = 10000,
+                TextModelMaxTokenTotal = 16000
+            })
+            .WithAzureBlobsStorage(new AzureBlobsConfig
+            {
+                ConnectionString = "DefaultEndpointsProtocol=https;AccountName=documentsmagellangpt;AccountKey=RPxGRLJn53YWMtix6sGk9E8L+YZ+kgwNkNQW4KC6f7HkK1b3J9qErXPANCSS/Og+DGkjne0ZKJra+ASt/vU8+A==;EndpointSuffix=core.windows.net",
+                Container = "documents",
+                Auth = AzureBlobsConfig.AuthTypes.ConnectionString
+            })
+            .WithCustomTextPartitioningOptions(new TextPartitioningOptions
+            {
+                MaxTokensPerLine = 40,
+                MaxTokensPerParagraph = 120,
+                OverlappingTokens = 30
+            })
+            .Build();
 
         _openAIService = openAIService;
         _azureAISearchMemoryStore = new AzureAISearchMemoryStore(aiSearchEndpoint, aiSearchKey);
@@ -100,6 +106,9 @@ public class AzureAiSearchService : IAzureAiSearchService
     /// <returns></returns>
     public async Task SearchMemoryAsync(string query)
     {
+        var statement = "Cuisson";
+        var verification = await _kernelMemory.AskAsync(statement, index: "document");
+
         var memoryResults = _memory.SearchAsync(MemoryCollectionName, query, limit: 2, minRelevanceScore: 0.5);
 
         int i = 0;
@@ -144,10 +153,8 @@ public class AzureAiSearchService : IAzureAiSearchService
     /// <returns>Returns token cost of embeddings</returns>
     private async Task<int> StoreMemoryRecordAsync(string documentKey, string documentValue)
     {
-        //await _kernelMemory.ImportTextAsync(documentValue);
-        //var statement = "Lucy flied by an asteroid";
-        //var verification = await _kernelMemory.AskAsync(statement);
-        var records = new List<MemoryRecord>();
+        // var test = await _kernelMemory.ImportTextAsync(documentValue);
+        // var tes = await _kernelMemory.ImportDocumentAsync("wwwroot/Files/legateauauchocolatdepierreherme.pdf", index: "document");
 
         var embeddingsDict = await _openAIService.GetEmbeddings(documentValue);
         var totalTokens = 0;

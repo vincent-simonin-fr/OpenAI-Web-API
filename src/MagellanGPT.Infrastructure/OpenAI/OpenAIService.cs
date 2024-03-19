@@ -93,10 +93,14 @@ public class OpenAIService : IOpenAIService
 
         if (conversation.Dialogs.Count == 1)
         {
-            messages = new List<ChatRequestMessage>() {
-                new ChatRequestSystemMessage($"Tu es un assistant IA expert. " +
+            var systemPrompt = conversation.SystemPromt is null
+                ? $"Tu es un assistant IA expert. " +
                 $"La complétion devra comportée une première partie titre délimité par les balises ### et ### sans espace, par exemple ###titre###, en début de réponse, " +
-                $"cette partie titre doit résumer la question suivante '{question}' en 4 mots maximum"),
+                $"cette partie titre doit résumer la question suivante '{question}' en 4 mots maximum"
+                : conversation.SystemPromt;
+
+            messages = new List<ChatRequestMessage>() {
+                new ChatRequestSystemMessage(systemPrompt),
             };
         }
         else
@@ -122,7 +126,6 @@ public class OpenAIService : IOpenAIService
             DeploymentName = _deploymentName,
             Temperature = (float)0.7,
             MaxTokens = 800,
-
             NucleusSamplingFactor = (float)0.95,
             FrequencyPenalty = 0,
             PresencePenalty = 0,
@@ -156,13 +159,11 @@ public class OpenAIService : IOpenAIService
 
     public async Task<Conversation> ProcessDemandWithRagSynchronously(Conversation conversation, string document)
     {
-        _deploymentName = conversation.LlmDeploymentName is not null ? conversation.LlmDeploymentName : _deploymentName;
-
         // Prompt Chaining https://www.promptingguide.ai/fr/techniques/prompt_chaining
         ChatCompletions response = await _client.GetChatCompletionsAsync(
         new ChatCompletionsOptions()
         {
-            DeploymentName = _deploymentName,
+            DeploymentName = conversation.Dialogs![^1].LlmDeploymentName,
             Messages =
             {
                 new ChatRequestSystemMessage($"Tu es un expert quelque soit le domaine." +

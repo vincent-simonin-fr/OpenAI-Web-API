@@ -42,6 +42,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
         builder.Entity<ApplicationUser>()
         .ToContainer(nameof(ApplicationUser))
+        .HasPartitionKey(u => u.PartitionKey)
         .HasNoDiscriminator()
         .Property(o => o.Id).ToJsonProperty("id");
 

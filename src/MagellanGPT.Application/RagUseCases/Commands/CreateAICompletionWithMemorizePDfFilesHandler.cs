@@ -109,12 +109,12 @@ public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<Cre
         var conversation = new Conversation
         {
             Id = Guid.NewGuid(),
-            LlmDeploymentName = request.LlmDeploymentName!,
             Title = "WIP",
             Dialogs = new List<Dialog> { new Dialog
             {
                 Question = request.Demand,
                 Answer = null,
+                LlmDeploymentName = request.LlmDeploymentName!,
                 TokensRequest = 0,
                 TokensResponse = 0,
                 CreatedAt = DateTime.Now,
@@ -134,7 +134,7 @@ public class PdfDecoder
     {
         using var stream = File.OpenRead(filename);
         var content = ExtractContent(stream);
-        File.Delete(filename);
+        // File.Delete(filename);
         return content;
     }
 

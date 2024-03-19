@@ -9,7 +9,6 @@ namespace MagellanGPT.Application.ChatbotUseCasesCommands;
 // [Authorize(Roles = "user")]
 public record CreateAICompletionSynchronously : IRequest<ResponseDto>
 {
-    public string? UserId { get; set; }
     public Guid? ConversationId { get; set; }
     public string? LlmDeploymentName { get; set; } = "ChatGPT35Turbo";
     public required string Demand { get; set; }
@@ -41,7 +40,7 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
     /// <returns></returns>
     public async Task<ResponseDto> Handle(CreateAICompletionSynchronously request, CancellationToken cancellationToken)
     {
-        if(_currentUserService.UserId is not null) request.UserId = _currentUserService.UserId;
+        ArgumentNullException.ThrowIfNull(_currentUserService.UserId, "ObjectId user not found");
 
         var initialization = await InitializeConversation(request, cancellationToken);
 
@@ -63,11 +62,11 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
 
     private async Task<(Conversation Conversation, User User, bool IsExistingConversation)> InitializeConversation(CreateAICompletionSynchronously request, CancellationToken cancellationToken)
     {
-        var user = _currentUserService.UserId is not null ? _context.User.FirstOrDefault(user => user.ObjectId == _currentUserService.UserId) : null;
+        var user = _context.User.FirstOrDefault(user => user.ObjectId == _currentUserService.UserId);
 
         if (user is null)
         {
-            user = new User(request.UserId);
+            user = new User(_currentUserService.UserId);
             _context.User.Add(user);
             await _context.SaveChangesAsync(cancellationToken);
         }
@@ -80,6 +79,7 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
             {
                 Question = request.Demand,
                 Answer = null,
+                LlmDeploymentName = request.LlmDeploymentName!,
                 TokensRequest = 0,
                 TokensResponse = 0,
                 CreatedAt = DateTime.Now,
@@ -93,11 +93,11 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
             {
                 Id = Guid.NewGuid(),
                 PartitionKey = nameof(Conversation),
-                LlmDeploymentName = request.LlmDeploymentName!,
                 Dialogs = new List<Dialog> { new Dialog
                 {
                     Question = request.Demand,
                     Answer = null,
+                    LlmDeploymentName = request.LlmDeploymentName!,
                     TokensRequest = 0,
                     TokensResponse = 0,
                     CreatedAt = DateTime.Now,
