@@ -9,6 +9,7 @@ public class ApplicationDbContextInitialiser
     private readonly ILogger<ApplicationDbContextInitialiser> _logger;
     private readonly ApplicationDbContext _context;
     private readonly IConfiguration _config;
+    private static bool _ensureCreated { get; set; } = false;
 
     public ApplicationDbContextInitialiser(ILogger<ApplicationDbContextInitialiser> logger, ApplicationDbContext context, IConfiguration config)
     {
@@ -21,9 +22,10 @@ public class ApplicationDbContextInitialiser
     {
         try
         {
-            if (!_context.Database.IsCosmos())
+            if (!_ensureCreated)
             {
-                throw new InvalidOperationException("Database must be a CosmosDB NoSql type");
+                _context.Database.EnsureCreated();
+                _ensureCreated = true;
             }
         }
         catch (Exception ex)

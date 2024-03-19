@@ -68,8 +68,8 @@ public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<Cre
 
         return new ResponseDto
         {
-            Id = conversation.Id,
-            ConversationId = conversation.ConversationId,
+            Id = "Diiage2024",
+            ConversationId = conversation.Id,
             Answer = conversation.Dialogs![^1].Answer,
             Tokens = (int)conversation.Dialogs![^1].TokensRequest!
             + (int)conversation.Dialogs![^1].TokensResponse!
@@ -108,15 +108,13 @@ public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<Cre
     {
         var conversation = new Conversation
         {
-            Id = request.UserId!,
-            ConversationId = Guid.NewGuid().ToString(),
+            Id = Guid.NewGuid(),
             LlmDeploymentName = request.LlmDeploymentName!,
             Title = "WIP",
             Dialogs = new List<Dialog> { new Dialog
             {
                 Question = request.Demand,
                 Answer = null,
-                DocumentId = null,
                 TokensRequest = 0,
                 TokensResponse = 0,
                 CreatedAt = DateTime.Now,

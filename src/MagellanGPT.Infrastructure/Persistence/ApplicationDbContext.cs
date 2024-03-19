@@ -1,7 +1,10 @@
 ﻿using System.Reflection;
+using System.Reflection.Emit;
 using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Domain.Entities;
+using MagellanGPT.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace MagellanGPT.Infrastructure.Persistence;
 
@@ -11,7 +14,10 @@ namespace MagellanGPT.Infrastructure.Persistence;
 /// </summary>
 public class ApplicationDbContext : DbContext, IApplicationDbContext
 {
-    public DbSet<Conversation> Conversations { get; set; }
+    public DbSet<Chat> Chat { get; set; }
+    public DbSet<ApplicationUser> ApplicationUser { get; set; }
+    public DbSet<User> User { get; set; }
+    public DbSet<Conversation> Conversation { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
@@ -20,6 +26,24 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+        // TODO : Refactor en configuration
+        builder.Entity<User>()
+        .ToContainer(nameof(User))
+        .HasPartitionKey(u => u.PartitionKey)
+        .HasNoDiscriminator()
+        .Property(o => o.Id).ToJsonProperty("id");
+
+        builder.Entity<Conversation>()
+        .ToContainer(nameof(Conversation))
+        .HasPartitionKey(u => u.PartitionKey)
+        .HasNoDiscriminator()
+        .Property(o => o.Id).ToJsonProperty("id");
+
+        builder.Entity<ApplicationUser>()
+        .ToContainer(nameof(ApplicationUser))
+        .HasNoDiscriminator()
+        .Property(o => o.Id).ToJsonProperty("id");
 
         base.OnModelCreating(builder);
     }

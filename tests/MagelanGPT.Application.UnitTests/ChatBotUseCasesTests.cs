@@ -75,11 +75,13 @@ public class ChatBotUseCasesTests
         demands.ForEach(demand =>
         {
             // Act
-            _createAICompletionSynchronously = new() { Demand = demand };
+            _createAICompletionSynchronously = new() { Demand = demand, UserId = "fd285508-8ba1-4064-be24-30dfdea0b376" };
 
-            var mockDbSet = GetDbSetMockedOf<Conversation>();
+            var mockDbSetConversation = GetDbSetMockedOf<Conversation>();
+            var mockDbSetUser = GetDbSetMockedOf<User>();
 
-            _dbContext.Setup(c => c.Conversations).Returns(mockDbSet);
+            _dbContext.Setup(c => c.Conversation).Returns(mockDbSetConversation);
+            _dbContext.Setup(c => c.User).Returns(mockDbSetUser);
 
             // Arrange
             var response = _createAICompletionSynchronouslyHandler.Handle(_createAICompletionSynchronously, CancellationToken.None).Result;

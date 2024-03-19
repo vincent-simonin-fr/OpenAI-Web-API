@@ -2,6 +2,6 @@
 
 public class CosmosDbConst
 {
-    public const string DbName = "Conversation";
-    public const string ConversationContainer = "ServiceDevelopment";
+    public const string DbName = "MagellanGPT";
+    public const string AssistantAIContainer = "AssistantAI";
 }

@@ -1,4 +1,5 @@
 ﻿using MagellanGPT.API;
+using MagellanGPT.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -32,12 +33,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 
     // Initialise and seed database
-    //using (var scope = app.Services.CreateScope())
-    //{
-    //    var initialiser = scope.ServiceProvider.GetRequiredService<ApplicationDbContextInitialiser>();
-    //    await initialiser.InitialiseAsync();
-    //    await initialiser.SeedAsync();
-    //}
+    using (var scope = app.Services.CreateScope())
+    {
+        var initialiser = scope.ServiceProvider.GetRequiredService<ApplicationDbContextInitialiser>();
+        await initialiser.InitialiseAsync();
+        // await initialiser.SeedAsync();
+    }
 }
 else
 {

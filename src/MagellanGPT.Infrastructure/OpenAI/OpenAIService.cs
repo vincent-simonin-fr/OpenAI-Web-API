@@ -95,7 +95,7 @@ public class OpenAIService : IOpenAIService
         {
             messages = new List<ChatRequestMessage>() {
                 new ChatRequestSystemMessage($"Tu es un assistant IA expert. " +
-                $"La complétion devra comportée une première partie titre délimité par <Title>, par exemple ###titre###, en début de réponse, " +
+                $"La complétion devra comportée une première partie titre délimité par les balises ### et ### sans espace, par exemple ###titre###, en début de réponse, " +
                 $"cette partie titre doit résumer la question suivante '{question}' en 4 mots maximum"),
             };
         }
@@ -132,11 +132,11 @@ public class OpenAIService : IOpenAIService
 
         ChatCompletions responseWithoutStream = await _client.GetChatCompletionsAsync(chatCompletionsOptions);
 
-        if (responseWithoutStream.Choices[0].Message.Content.Contains("<Title>"))
+        if (responseWithoutStream.Choices[0].Message.Content.Contains("###"))
         {
-            var responseWithTitle = responseWithoutStream.Choices[0].Message.Content.Split("<Title>")[1].Split("</Title>");
+            var responseWithTitle = responseWithoutStream.Choices[0].Message.Content.Split("###", StringSplitOptions.RemoveEmptyEntries);
             title = responseWithTitle[0];
-            response = responseWithTitle[1].Replace("\n\n", "");
+            response = responseWithTitle[1].Replace("\n\n", "").Trim();
 
             conversation.Title = title;
             conversation.Dialogs[^1].Answer = response;
@@ -187,51 +187,51 @@ public class OpenAIService : IOpenAIService
         return conversation;
     }
 
-    public async Task<(ReadOnlyMemory<float> EmbeddingArray, int TotalTokens)> GetEmbeddingsAsync(string document)
-    {
-        var embeddings = new Dictionary<int, Embeddings>();
+//    public async Task<(ReadOnlyMemory<float> EmbeddingArray, int TotalTokens)> GetEmbeddingsAsync(string document)
+//    {
+//        var embeddings = new Dictionary<int, Embeddings>();
 
-#pragma warning disable SKEXP0055
-#pragma warning disable SKEXP0050
-        var lines = TextChunker.SplitPlainTextLines(document, 40);
-        var paragraphs = TextChunker.SplitPlainTextParagraphs(lines, 120);
+//#pragma warning disable SKEXP0055
+//#pragma warning disable SKEXP0050
+//        var lines = TextChunker.SplitPlainTextLines(document, 40);
+//        var paragraphs = TextChunker.SplitPlainTextParagraphs(lines, 120);
 
-        var index = 1;
+//        var index = 1;
 
-        paragraphs.ForEach(async (paragraph) =>
-        {
-            EmbeddingsOptions embeddingOptions = new()
-            {
-                DeploymentName = "text-embedding-ada-002",
-                Input = { paragraph },
-            };
+//        paragraphs.ForEach(async (paragraph) =>
+//        {
+//            EmbeddingsOptions embeddingOptions = new()
+//            {
+//                DeploymentName = "text-embedding-ada-002",
+//                Input = { paragraph },
+//            };
 
-            var returnValue = await _client.GetEmbeddingsAsync(embeddingOptions);
+//            var returnValue = await _client.GetEmbeddingsAsync(embeddingOptions);
 
-            embeddings.Add(index , returnValue.Value);
-        });
+//            embeddings.Add(index , returnValue.Value);
+//        });
 
-        EmbeddingsOptions embeddingOptions = new()
-        {
-            DeploymentName = "text-embedding-ada-002",
-            Input = { document },
-        };
+//        EmbeddingsOptions embeddingOptions = new()
+//        {
+//            DeploymentName = "text-embedding-ada-002",
+//            Input = { document },
+//        };
 
-        var returnValue = await _client.GetEmbeddingsAsync(embeddingOptions);
+//        var returnValue = await _client.GetEmbeddingsAsync(embeddingOptions);
 
 
-        var totalTokens = returnValue.Value.Usage.TotalTokens;
-        var embeddingArray = returnValue.Value.Data[0].Embedding;
+//        var totalTokens = returnValue.Value.Usage.TotalTokens;
+//        var embeddingArray = returnValue.Value.Data[0].Embedding;
 
-        foreach (float item in returnValue.Value.Data[0].Embedding.ToArray())
-        {
-            Console.WriteLine(item);
-        }
+//        foreach (float item in returnValue.Value.Data[0].Embedding.ToArray())
+//        {
+//            Console.WriteLine(item);
+//        }
 
-        return (embeddingArray, totalTokens);
-    }
+//        return (embeddingArray, totalTokens);
+//    }
 
-    public async Task<Dictionary<int, EmbeddingsDto>> GetEmbeddingsAsync2(string document)
+    public async Task<Dictionary<int, EmbeddingsDto>> GetEmbeddings(string document)
     {
         var embeddings = new Dictionary<int, EmbeddingsDto>();
 #pragma warning disable SKEXP0055

@@ -7,7 +7,6 @@ public class DialogDto
 {
     public string? Question { get; set; }
     public string? Answer { get; set; }
-    public List<string>? DocumentId { get; set; }
     public int? Tokens { get; set; }
     public DateTime CreatedAt { get; set; }
 
@@ -16,7 +15,6 @@ public class DialogDto
             {
                 Question = dialog.Question,
                 Answer = dialog.Answer,
-                DocumentId = dialog.DocumentId,
                 Tokens = dialog.TokensRequest + dialog.TokensResponse + dialog.TokensDocumentProcessing,
                 CreatedAt = dialog.CreatedAt
             };

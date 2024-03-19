@@ -5,12 +5,12 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace MagellanGPT.Infrastructure.Persistence.Configurations;
 
-public class ConversationConfiguration : IEntityTypeConfiguration<Conversation>
+public class ChatConfiguration : IEntityTypeConfiguration<Chat>
 {
-    public void Configure(EntityTypeBuilder<Conversation> builder)
+    public void Configure(EntityTypeBuilder<Chat> builder)
     {
-        builder.ToContainer(CosmosDbConst.ConversationContainer)
-            .HasPartitionKey("ConversationId")
+        builder.ToContainer("Chat")
+            .HasPartitionKey("PartitionKey")
             .HasNoDiscriminator()
             .Property(o => o.Id).ToJsonProperty("id");
     }

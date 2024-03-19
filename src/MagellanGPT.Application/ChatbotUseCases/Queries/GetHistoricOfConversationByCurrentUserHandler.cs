@@ -1,9 +1,11 @@
-﻿using System.Data;
+﻿using System.Collections.Concurrent;
+using System.Data;
 using System.Text.Json;
 using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Application.Common.Models;
 using MagellanGPT.Application.Common.Security;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace MagellanGPT.Application.ChatbotUseCases.Queries;
 
@@ -23,7 +25,19 @@ public class GetHistoricOfConversationByCurrentUserHandler : IRequestHandler<Get
 
     public async Task<IEnumerable<ConversationDto>> Handle(GetHistoricOfConversationByCurrentUser request, CancellationToken cancellationToken)
     {
-        var conversation = _context.Conversations.Where(conversation => conversation.Id == _currentUserService.UserId).ToList();
+        //var users2 = _context.User.Where(chat => chat.Users).AsEnumerable().ToList();
+        //var users1 = _context.Chats.Select(chat => chat.Users).FirstOrDefault();
+        //var chat = _context.Chats.Select(chat => chat.Users.Where(u => u.Id.ToString() == "83f00ae7-efa3-46a6-88d0-6cbd411084cb")).FirstOrDefault();
+
+        //var users = await _context.User
+        //    .Where(user => user.ObjectId == "Test" && user.PartitionKey == "Chat")
+        //    .FirstAsync(cancellationToken);
+
+        //var user = await _context.User
+        //    .Where(user => user.ObjectId == _currentUserService.UserId && EF.Property<string>(user, "PartitionKey") == "Chat")
+        //    .FirstAsync(cancellationToken);
+
+        var conversation = _context.Conversation.Where(conversation => conversation.User.ObjectId == _currentUserService.UserId).ToList();
 
         return conversation.AsQueryable().Select(ConversationDto.Projection).ToList();
     }

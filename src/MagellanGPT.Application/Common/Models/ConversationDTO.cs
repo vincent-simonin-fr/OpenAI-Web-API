@@ -5,8 +5,7 @@ namespace MagellanGPT.Application.Common.Models;
 
 public class ConversationDto
 {
-    public string Id { get; set; }
-    public string ConversationId { get; set; }
+    public Guid? ConversationId { get; set; }
     public List<DialogDto> Dialogs { get; set; }
     public int? Tokens { get; set; }
     public string Title { get; set; }
@@ -14,8 +13,7 @@ public class ConversationDto
     public static Expression<Func<Conversation, ConversationDto>> Projection { get; } = conversation
             => new ConversationDto
             {
-                Id = conversation.Id,
-                ConversationId = conversation.ConversationId,
+                ConversationId = conversation.Id,
                 Dialogs = conversation.Dialogs!.AsQueryable().Select(DialogDto.Projection).ToList(),
                 Tokens = conversation.Tokens,
                 Title = conversation.Title ?? "",

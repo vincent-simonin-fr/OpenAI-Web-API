@@ -1,4 +1,5 @@
-﻿using MagellanGPT.Application.Common.Interfaces;
+﻿using System.Threading;
+using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Application.Common.Models;
 using MagellanGPT.Domain.Entities;
 using MediatR;
@@ -9,7 +10,7 @@ namespace MagellanGPT.Application.ChatbotUseCasesCommands;
 public record CreateAICompletionSynchronously : IRequest<ResponseDto>
 {
     public string? UserId { get; set; }
-    public string? ConversationId { get; set; }
+    public Guid? ConversationId { get; set; }
     public string? LlmDeploymentName { get; set; } = "ChatGPT35Turbo";
     public required string Demand { get; set; }
     public string? SystemPrompt { get; set; }
@@ -40,29 +41,38 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
     /// <returns></returns>
     public async Task<ResponseDto> Handle(CreateAICompletionSynchronously request, CancellationToken cancellationToken)
     {
-        request.UserId = _currentUserService.UserId;
+        if(_currentUserService.UserId is not null) request.UserId = _currentUserService.UserId;
 
-        var initialization = InitializeConversation(request);
+        var initialization = await InitializeConversation(request, cancellationToken);
 
         if (request.SystemPrompt is not null) initialization.Conversation.SystemPromt = request.SystemPrompt;
 
         await _openAiService.ProcessDemandSynchronously(initialization.Conversation);
 
-        initialization.Conversation = await StoreDialog(initialization.Conversation, initialization.IsExistingConversation, cancellationToken);
+        initialization.Conversation = await UpsertConversation(initialization.Conversation, initialization.IsExistingConversation, cancellationToken);
 
         var dialog = initialization.Conversation.Dialogs![^1];
 
         return new ResponseDto {
-            Id = initialization.Conversation.Id,
-            ConversationId = initialization.Conversation.ConversationId,
+            Id = "MagellanGPT",
+            ConversationId = initialization.Conversation.Id,
             Answer = dialog.Answer,
             Tokens = (int)dialog.TokensRequest! + (int)dialog.TokensResponse!
         };
     }
 
-    private (Conversation Conversation, bool IsExistingConversation) InitializeConversation(CreateAICompletionSynchronously request)
+    private async Task<(Conversation Conversation, User User, bool IsExistingConversation)> InitializeConversation(CreateAICompletionSynchronously request, CancellationToken cancellationToken)
     {
-        Conversation? conversation = request.ConversationId is not null ? _context.Conversations.FirstOrDefault(c => c.Id == request.UserId && c.ConversationId == request.ConversationId) : null;
+        var user = _currentUserService.UserId is not null ? _context.User.FirstOrDefault(user => user.ObjectId == _currentUserService.UserId) : null;
+
+        if (user is null)
+        {
+            user = new User(request.UserId);
+            _context.User.Add(user);
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        Conversation? conversation = request.ConversationId is not null ? _context.Conversation.FirstOrDefault(c => c.Id == request.ConversationId) : null;
         bool isExistingConversation;
         if (conversation is not null)
         {
@@ -70,7 +80,6 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
             {
                 Question = request.Demand,
                 Answer = null,
-                DocumentId = null,
                 TokensRequest = 0,
                 TokensResponse = 0,
                 CreatedAt = DateTime.Now,
@@ -82,33 +91,44 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
         {
             conversation = new Conversation
             {
-                Id = request.UserId!,
-                ConversationId = Guid.NewGuid().ToString(),
+                Id = Guid.NewGuid(),
+                PartitionKey = nameof(Conversation),
                 LlmDeploymentName = request.LlmDeploymentName!,
                 Dialogs = new List<Dialog> { new Dialog
                 {
                     Question = request.Demand,
                     Answer = null,
-                    DocumentId = null,
                     TokensRequest = 0,
                     TokensResponse = 0,
                     CreatedAt = DateTime.Now,
                 }},
-                Tokens = 0
+                Tokens = 0,
+                User = user
             };
+
+            user.Conversations.Add(conversation);
+            _context.User.Update(user);
 
             isExistingConversation = false;
         }
 
-        return (conversation, isExistingConversation);
+        return (conversation, user, isExistingConversation);
     }
 
-    private async Task<Conversation> StoreDialog(
+    private async Task<Conversation> UpsertConversation(
         Conversation conversation,
         bool isExistingConversation,
         CancellationToken cancellationToken)
     {
-        if(!isExistingConversation) _context.Conversations.Add(conversation);
+        // var chat = _context.Chat.First();
+
+        if (!isExistingConversation)
+        {
+            
+            //chat.Conversations.Add(conversation);
+            //_context.Chat.Update(chat);
+            _context.Conversation.Add(conversation);
+        }
 
         await _context.SaveChangesAsync(cancellationToken);
 

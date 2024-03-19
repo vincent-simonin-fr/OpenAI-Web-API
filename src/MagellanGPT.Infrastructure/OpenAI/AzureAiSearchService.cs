@@ -133,7 +133,7 @@ public class AzureAiSearchService : IAzureAiSearchService
         //var verification = await _kernelMemory.AskAsync(statement);
         var records = new List<MemoryRecord>();
 
-        var embeddingsDict = await _openAIService.GetEmbeddingsAsync2(documentValue);
+        var embeddingsDict = await _openAIService.GetEmbeddings(documentValue);
         var totalTokens = 0;
         var index = 0;
         foreach (var embedding in embeddingsDict)
