@@ -40,7 +40,7 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
     /// <returns></returns>
     public async Task<ResponseDto> Handle(CreateAICompletionSynchronously request, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(_currentUserService.UserId, "ObjectId user not found");
+        ArgumentNullException.ThrowIfNullOrEmpty(_currentUserService.UserId, "ObjectId user not found");
 
         var initialization = await InitializeConversation(request, cancellationToken);
 

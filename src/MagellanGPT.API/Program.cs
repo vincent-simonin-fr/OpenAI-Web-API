@@ -1,7 +1,7 @@
-﻿using MagellanGPT.API;
+﻿using Azure.Identity;
+using MagellanGPT.API;
 using MagellanGPT.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +10,16 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+if(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production")
+{
+    // Load configuration from Azure App Configuration
+    // https://learn.microsoft.com/fr-fr/azure/azure-app-configuration/howto-integrate-azure-managed-service-identity?pivots=framework-dotnet
+    builder.Configuration.AddAzureAppConfiguration(options =>
+    options.Connect(
+        new Uri(builder.Configuration["AppConfig:Endpoint"]),
+        new ManagedIdentityCredential()));
+}
 
 builder.Services.AddAPIServices();
 builder.Services.AddApplicationServices();

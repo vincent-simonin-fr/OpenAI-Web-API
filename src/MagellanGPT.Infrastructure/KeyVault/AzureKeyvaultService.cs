@@ -2,6 +2,7 @@
 using Azure.Security.KeyVault.Secrets;
 using MagellanGPT.Application.Common.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace MagellanGPT.Infrastructure.KeyVault;
 
@@ -11,7 +12,7 @@ public class AzureKeyvaultService : IAzureKeyvaultService
 
     public AzureKeyvaultService(IConfiguration configuration)
     {
-        var keyvaultUri = configuration["KeyVault:Uri"]!;
+        var keyvaultUri = configuration["KeyVault:Uri"];
         var tenantId = configuration["KeyVault:TenantId"];
         var clientId = configuration["KeyVault:ClientId"];
         var clientSecret = configuration["KeyVault:ClientSecret"];
