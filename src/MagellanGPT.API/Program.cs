@@ -11,15 +11,19 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-if(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production")
-{
-    // Load configuration from Azure App Configuration
-    // https://learn.microsoft.com/fr-fr/azure/azure-app-configuration/howto-integrate-azure-managed-service-identity?pivots=framework-dotnet
-    builder.Configuration.AddAzureAppConfiguration(options =>
-    options.Connect(
-        new Uri(builder.Configuration["AppConfig:Endpoint"]),
-        new ManagedIdentityCredential()));
-}
+// Load configuration from Azure App Configuration
+// https://learn.microsoft.com/fr-fr/azure/azure-app-configuration/howto-integrate-azure-managed-service-identity?pivots=framework-dotnet
+builder.Configuration.AddAzureAppConfiguration(builder.Configuration["AppConfig:ConnectionString"]);
+
+//if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Production")
+//{
+//    // Load configuration from Azure App Configuration
+//    // https://learn.microsoft.com/fr-fr/azure/azure-app-configuration/howto-integrate-azure-managed-service-identity?pivots=framework-dotnet
+//    builder.Configuration.AddAzureAppConfiguration(options =>
+//    options.Connect(
+//        new Uri(builder.Configuration["AppConfig:Endpoint"]),
+//        new ManagedIdentityCredential("d7ef3c85-2d71-41bd-afe0-2c715ff53583")));
+//}
 
 builder.Services.AddAPIServices();
 builder.Services.AddApplicationServices();
