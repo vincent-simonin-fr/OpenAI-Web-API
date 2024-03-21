@@ -2,7 +2,6 @@
 using Azure.Security.KeyVault.Secrets;
 using MagellanGPT.Application.Common.Interfaces;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
 namespace MagellanGPT.Infrastructure.KeyVault;
 

@@ -11,5 +11,5 @@ public interface IOpenAIService
     // Task<IAsyncEnumerable<StreamingChatCompletionsUpdate>> ProcessDemandWithRag(string question, string document, string? deploymentName = null);
     // Task<(ReadOnlyMemory<float> EmbeddingArray, int TotalTokens)> GetEmbeddingsAsync(string document);
     Task<Dictionary<int, EmbeddingsDto>> GetEmbeddings(string document);
-    Task<Conversation> ProcessDemandWithRagSynchronously(Conversation conversation, string document);
+    Task<Conversation> ProcessDemandWithDatasource(Conversation conversation, string document);
 }

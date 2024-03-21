@@ -64,7 +64,7 @@ public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<Cre
         }
 
         // Requête de complétion de la demande
-        await _openAIService.ProcessDemandWithRagSynchronously(conversation, document.ToString());
+        await _openAIService.ProcessDemandWithDatasource(conversation, document.ToString());
 
         return new ResponseDto
         {

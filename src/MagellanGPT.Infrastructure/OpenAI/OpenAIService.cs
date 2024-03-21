@@ -5,6 +5,9 @@ using MagellanGPT.Application.Common.Models;
 using MagellanGPT.Domain.Entities;
 using MagellanGPT.Infrastructure.KeyVault;
 using Microsoft.Extensions.Configuration;
+using Microsoft.KernelMemory;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.Text;
 
 namespace MagellanGPT.Infrastructure.OpenAI;
@@ -91,13 +94,15 @@ public class OpenAIService : IOpenAIService
         string? response = null;
         string? title = null;
 
+        _deploymentName = conversation.Dialogs[^1].LlmDeploymentName ?? _deploymentName;
+
         if (conversation.Dialogs.Count == 1)
         {
-            var systemPrompt = conversation.SystemPromt is null
+            var systemPrompt = conversation.SystemPrompt is null
                 ? $"Tu es un assistant IA expert. " +
                 $"La complétion devra comportée une première partie titre délimité par les balises ### et ### sans espace, par exemple ###titre###, en début de réponse, " +
                 $"cette partie titre doit résumer la question suivante '{question}' en 4 mots maximum"
-                : conversation.SystemPromt;
+                : conversation.SystemPrompt;
 
             messages = new List<ChatRequestMessage>() {
                 new ChatRequestSystemMessage(systemPrompt),
@@ -157,7 +162,7 @@ public class OpenAIService : IOpenAIService
         return conversation;
     }
 
-    public async Task<Conversation> ProcessDemandWithRagSynchronously(Conversation conversation, string document)
+    public async Task<Conversation> ProcessDemandWithDatasource(Conversation conversation, string document)
     {
         // Prompt Chaining https://www.promptingguide.ai/fr/techniques/prompt_chaining
         ChatCompletions response = await _client.GetChatCompletionsAsync(
@@ -188,49 +193,37 @@ public class OpenAIService : IOpenAIService
         return conversation;
     }
 
-//    public async Task<(ReadOnlyMemory<float> EmbeddingArray, int TotalTokens)> GetEmbeddingsAsync(string document)
-//    {
-//        var embeddings = new Dictionary<int, Embeddings>();
+    public async Task ProcessDemandWithPlugin()
+    {
+        var builder = Kernel.CreateBuilder();
 
-//#pragma warning disable SKEXP0055
-//#pragma warning disable SKEXP0050
-//        var lines = TextChunker.SplitPlainTextLines(document, 40);
-//        var paragraphs = TextChunker.SplitPlainTextParagraphs(lines, 120);
+        builder
+            // For OpenAI:
+            .AddOpenAIChatCompletion(
+                modelId: _deploymentName,
+                apiKey: SecretManager.GetInstance().OpenAiKey);
 
-//        var index = 1;
+        var kernel = builder.Build();
 
-//        paragraphs.ForEach(async (paragraph) =>
-//        {
-//            EmbeddingsOptions embeddingOptions = new()
-//            {
-//                DeploymentName = "text-embedding-ada-002",
-//                Input = { paragraph },
-//            };
+        var skPrompt = """
+                   Question: {{$input}}
+                   Tool call result: {{memory.ask $input index='private'}}
+                   If the answer is empty say "I don't know", otherwise reply with a preview of the answer, truncated to 15 words.
+                   """;
 
-//            var returnValue = await _client.GetEmbeddingsAsync(embeddingOptions);
+        var promptOptions = new OpenAIPromptExecutionSettings { ChatSystemPrompt = "Answer or say \"I don't know\".", MaxTokens = 100, Temperature = 0, TopP = 0 };
 
-//            embeddings.Add(index , returnValue.Value);
-//        });
+        var myFunction2 = kernel.CreateFunctionFromPrompt(skPrompt, promptOptions);
 
-//        EmbeddingsOptions embeddingOptions = new()
-//        {
-//            DeploymentName = "text-embedding-ada-002",
-//            Input = { document },
-//        };
+        // === PREPARE MEMORY PLUGIN ===
+        // Load the Kernel Memory plugin into Semantic Kernel.
+        // We're using a local instance here, so remember to start the service locally first,
+        // otherwise change the URL pointing to your KM endpoint.
 
-//        var returnValue = await _client.GetEmbeddingsAsync(embeddingOptions);
+        //var memoryConnector = GetMemoryConnector();
+        // var memoryPlugin = kernel.ImportPluginFromObject(new MemoryPlugin(memoryConnector, waitForIngestionToComplete: true), "memory");
 
-
-//        var totalTokens = returnValue.Value.Usage.TotalTokens;
-//        var embeddingArray = returnValue.Value.Data[0].Embedding;
-
-//        foreach (float item in returnValue.Value.Data[0].Embedding.ToArray())
-//        {
-//            Console.WriteLine(item);
-//        }
-
-//        return (embeddingArray, totalTokens);
-//    }
+    }
 
     public async Task<Dictionary<int, EmbeddingsDto>> GetEmbeddings(string document)
     {
@@ -266,5 +259,84 @@ public class OpenAIService : IOpenAIService
 
         return embeddings;
     }
+
+    private static IKernelMemory GetMemoryConnector(bool serverless = false)
+    {
+        if (!serverless)
+        {
+            //return new MemoryWebClient("http://127.0.0.1:9001/", Environment.GetEnvironmentVariable("MEMORY_API_KEY"));
+        }
+
+        Console.WriteLine("This code is intentionally disabled.");
+        Console.WriteLine("To test the plugin with Serverless memory:");
+        Console.WriteLine("* Add a project reference to CoreLib");
+        Console.WriteLine("* Uncomment/edit the code in " + nameof(GetMemoryConnector));
+        Environment.Exit(-1);
+        return null;
+
+        // return new KernelMemoryBuilder()
+        //     .WithAzureOpenAIEmbeddingGeneration(new AzureOpenAIConfig
+        //     {
+        //         APIType = AzureOpenAIConfig.APITypes.EmbeddingGeneration,
+        //         Endpoint = EnvVar("AOAI_ENDPOINT"),
+        //         Deployment = EnvVar("AOAI_DEPLOYMENT_EMBEDDING"),
+        //         Auth = AzureOpenAIConfig.AuthTypes.APIKey,
+        //         APIKey = EnvVar("AOAI_API_KEY"),
+        //     })
+        //     .WithAzureOpenAITextGeneration(new AzureOpenAIConfig
+        //     {
+        //         APIType = AzureOpenAIConfig.APITypes.ChatCompletion,
+        //         Endpoint = EnvVar("AOAI_ENDPOINT"),
+        //         Deployment = EnvVar("AOAI_DEPLOYMENT_TEXT"),
+        //         Auth = AzureOpenAIConfig.AuthTypes.APIKey,
+        //         APIKey = EnvVar("AOAI_API_KEY"),
+        //     })
+        //     .Build<MemoryServerless>();
+    }
+
+    //    public async Task<(ReadOnlyMemory<float> EmbeddingArray, int TotalTokens)> GetEmbeddingsAsync(string document)
+    //    {
+    //        var embeddings = new Dictionary<int, Embeddings>();
+
+    //#pragma warning disable SKEXP0055
+    //#pragma warning disable SKEXP0050
+    //        var lines = TextChunker.SplitPlainTextLines(document, 40);
+    //        var paragraphs = TextChunker.SplitPlainTextParagraphs(lines, 120);
+
+    //        var index = 1;
+
+    //        paragraphs.ForEach(async (paragraph) =>
+    //        {
+    //            EmbeddingsOptions embeddingOptions = new()
+    //            {
+    //                DeploymentName = "text-embedding-ada-002",
+    //                Input = { paragraph },
+    //            };
+
+    //            var returnValue = await _client.GetEmbeddingsAsync(embeddingOptions);
+
+    //            embeddings.Add(index , returnValue.Value);
+    //        });
+
+    //        EmbeddingsOptions embeddingOptions = new()
+    //        {
+    //            DeploymentName = "text-embedding-ada-002",
+    //            Input = { document },
+    //        };
+
+    //        var returnValue = await _client.GetEmbeddingsAsync(embeddingOptions);
+
+
+    //        var totalTokens = returnValue.Value.Usage.TotalTokens;
+    //        var embeddingArray = returnValue.Value.Data[0].Embedding;
+
+    //        foreach (float item in returnValue.Value.Data[0].Embedding.ToArray())
+    //        {
+    //            Console.WriteLine(item);
+    //        }
+
+    //        return (embeddingArray, totalTokens);
+    //    }
+
 }
 

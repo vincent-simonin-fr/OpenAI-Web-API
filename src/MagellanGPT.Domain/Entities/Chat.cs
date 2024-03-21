@@ -1,5 +1,6 @@
 ﻿namespace MagellanGPT.Domain.Entities;
 
+// TODO Remove if not used
 public class Chat
 {
     public string Id { get; set; } = "MagellanGPT";

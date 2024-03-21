@@ -42,6 +42,13 @@ The Shared Layer consists of common utilities, helper functions, and shared serv
 - ASP.NET Core 8.0  
 - Visual Studio or VS Code & IIS Express
 
+## Code quality analysis
+Use SonarQube image with docker - sonar:lts-community
+```bash
+docker run -d --name sonarqube -p 9000:9000 -p 9092:9092 sonarqube
+docker run -ti -v $(pwd):/root/src --link sonarqube newtmitch/sonar-scanner
+```
+
 Go to http://localhost:9000
 User: admin
 Password: admin

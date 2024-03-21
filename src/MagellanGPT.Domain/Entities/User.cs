@@ -4,7 +4,8 @@ public class User : BaseEntity
 {
     public string ObjectId { get; set; }
     public string PartitionKey { get; set; } = "User";
-    public ICollection<Conversation> Conversations{ get; set; }
+    public List<Conversation> Conversations{ get; set; }
+    public string? SystemPrompt { get; set; }
     public int? Tokens { get; set; }
 
     public User()

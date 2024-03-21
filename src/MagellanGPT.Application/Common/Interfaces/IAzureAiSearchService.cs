@@ -1,7 +1,9 @@
-﻿namespace MagellanGPT.Application.Common.Interfaces;
+﻿using Microsoft.KernelMemory;
+
+namespace MagellanGPT.Application.Common.Interfaces;
 
 public interface IAzureAiSearchService
 {
     Task<int> StoreAsync(Dictionary<string, string> documents);
-    Task SearchMemoryAsync(string query);
+    Task<SearchResult> SearchMemoryAsync(string query);
 }

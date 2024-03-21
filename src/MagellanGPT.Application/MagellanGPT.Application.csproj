@@ -18,6 +18,8 @@
     <None Remove="ChatbotUseCases\Commands\CreateAICompletion\" />
     <None Remove="RagUseCases\Queries\" />
     <None Remove="RagUseCases\" />
+    <None Remove="KnowledgeBaseUseCases\" />
+    <None Remove="KnowledgeBaseUseCases\Queries\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\" />
@@ -31,6 +33,8 @@
     <Folder Include="ChatbotUseCases\Commands\CreateAICompletion\" />
     <Folder Include="RagUseCases\Queries\" />
     <Folder Include="RagUseCases\" />
+    <Folder Include="KnowledgeBaseUseCases\" />
+    <Folder Include="KnowledgeBaseUseCases\Queries\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MagellanGPT.Domain\MagellanGPT.Domain.csproj" />

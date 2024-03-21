@@ -34,7 +34,7 @@
     <PackageReference Include="Azure.Security.KeyVault.Secrets" Version="4.6.0" />
     <PackageReference Include="Azure.Security.KeyVault.Certificates" Version="4.6.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.4.0" />
-    <PackageReference Include="Microsoft.KernelMemory.Core" Version="0.34.240313.1" />
+    <PackageReference Include="Microsoft.KernelMemory.Core" Version="0.35.240318.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MagellanGPT.Application\MagellanGPT.Application.csproj" />

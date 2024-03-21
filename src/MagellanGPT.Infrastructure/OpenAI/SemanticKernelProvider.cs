@@ -1,4 +1,7 @@
-﻿using Microsoft.SemanticKernel;
+﻿using MagellanGPT.Infrastructure.KeyVault;
+using System.Configuration;
+using Microsoft.SemanticKernel;
+using Microsoft.Extensions.Configuration;
 
 namespace MagellanGPT.Infrastructure.OpenAI;
 
@@ -7,8 +10,5 @@ namespace MagellanGPT.Infrastructure.OpenAI;
 /// </summary>
 public sealed class SemanticKernelProvider
 {
-    private readonly IKernelBuilder _kernelBuilder;
-
-
 }
 

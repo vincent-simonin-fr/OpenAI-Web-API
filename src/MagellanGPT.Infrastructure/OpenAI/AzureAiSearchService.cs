@@ -21,9 +21,6 @@ public class AzureAiSearchService : IAzureAiSearchService
     private const string MemoryCollectionName = "SKMagellanGPT1";
     private readonly string _azureBlobStorageConnectionString;
 
-#pragma warning disable SKEXP0001
-#pragma warning disable SKEXP0003
-    private readonly ISemanticTextMemory _memory;
     private readonly IKernelMemory _kernelMemory;
 
 #pragma warning disable SKEXP0021
@@ -38,14 +35,6 @@ public class AzureAiSearchService : IAzureAiSearchService
         var aiSearchKey = SecretManager.GetInstance().AiSearchKey;
         _azureBlobStorageConnectionString = configuration.GetSection("AzureBlobStorage:ConnectionString").Value!;
 
-#pragma warning disable SKEXP0003
-#pragma warning disable SKEXP0011
-#pragma warning disable SKEXP0010
-#pragma warning disable SKEXP0021
-        _memory = new MemoryBuilder()
-            .WithAzureOpenAITextEmbeddingGeneration("text-embedding-ada-002", openAiEndpoint, openAiKey)
-            .WithMemoryStore(new AzureAISearchMemoryStore(aiSearchEndpoint, aiSearchKey))
-            .Build();
 
         // https://github.com/microsoft/kernel-memory/blob/main/service/Core/Configuration/KernelMemoryConfig.cs
         _kernelMemory = new KernelMemoryBuilder()
@@ -63,6 +52,11 @@ public class AzureAiSearchService : IAzureAiSearchService
                 Endpoint = aiSearchEndpoint,
                 APIKey = aiSearchKey,
                 Auth = AzureAISearchConfig.AuthTypes.APIKey,
+                
+            })
+            .WithSearchClientConfig(new SearchClientConfig
+            {
+                
             })
             .WithOpenAITextGeneration(new OpenAIConfig
             {
@@ -80,11 +74,11 @@ public class AzureAiSearchService : IAzureAiSearchService
             })
             .WithCustomTextPartitioningOptions(new TextPartitioningOptions
             {
-                MaxTokensPerLine = 40,
-                MaxTokensPerParagraph = 120,
-                OverlappingTokens = 30
+                MaxTokensPerLine = 60,
+                MaxTokensPerParagraph = 150,
+                OverlappingTokens = 20
             })
-            .Build();
+            .Build<MemoryServerless>();
 
         _openAIService = openAIService;
         _azureAISearchMemoryStore = new AzureAISearchMemoryStore(aiSearchEndpoint, aiSearchKey);
@@ -106,62 +100,35 @@ public class AzureAiSearchService : IAzureAiSearchService
     /// </summary>
     /// <param name="query"></param>
     /// <returns></returns>
-    public async Task SearchMemoryAsync(string query)
+    public async Task<SearchResult> SearchMemoryAsync(string query)
     {
-        var statement = "Cuisson";
-        var verification = await _kernelMemory.AskAsync(statement, index: "document");
+        var searchResult = await _kernelMemory.SearchAsync(query: query, index: "document", limit: 10, minRelevance: 0.5);
 
-        var memoryResults = _memory.SearchAsync(MemoryCollectionName, query, limit: 2, minRelevanceScore: 0.5);
-
-        int i = 0;
-        await foreach (MemoryQueryResult memoryResult in memoryResults)
-        {
-            Console.WriteLine($"Result {++i}:");
-            Console.WriteLine("  URL:     : " + memoryResult.Metadata.Id);
-            Console.WriteLine("  Title    : " + memoryResult.Metadata.Description);
-            Console.WriteLine("  Relevance: " + memoryResult.Relevance);
-            Console.WriteLine();
-        }
-
-        Console.WriteLine("----------------------");
+        return searchResult;
     }
 
     /// <summary>
-    /// Returns token cost of embeddings
-    /// </summary>
-    /// <param name="documentKey"></param>
-    /// <param name="documentValue"></param>
-    /// <returns></returns>
-    //private async Task<int> StoreMemoryRecordAsync(string documentKey, string documentValue)
-    //{
-    //    (ReadOnlyMemory<float> EmbeddingArray, int TotalTokens) response = await _openAIService.GetEmbeddingsAsync(documentValue);
-
-    //    var embeddings = await _openAIService.GetEmbeddingsAsync2(documentValue);
-
-    //    var memoryRecordMetadata = new MemoryRecordMetadata(true, documentKey, documentKey, documentValue, string.Empty, string.Empty);
-
-    //    var memoryRecord = new MemoryRecord(memoryRecordMetadata, response.EmbeddingArray, documentKey, DateTimeOffset.UtcNow);
-
-    //    await _azureAISearchMemoryStore.UpsertAsync(MemoryCollectionName, memoryRecord);
-
-    //    return response.TotalTokens;
-    //}
-
-    /// <summary>
     /// Memorization
+    /// https://github.com/Azure-Samples/azure-search-sample-data
     /// </summary>
     /// <param name="documentKey"></param>
     /// <param name="documentValue"></param>
     /// <returns>Returns token cost of embeddings</returns>
     private async Task<int> StoreMemoryRecordAsync(string documentKey, string documentValue)
     {
-        // var test = await _kernelMemory.ImportTextAsync(documentValue);
-        // var tes = await _kernelMemory.ImportDocumentAsync("wwwroot/Files/legateauauchocolatdepierreherme.pdf", index: "document");
+        // TODO L'utilisation de kernel memory est à améliorer
+        // L'import de document fonctionne correctement mais les erreur ne sont pas géré
+        // Le requêtage ne fonctionne pas, cela est proprablement du à la configuration de la pipeline
+        var documentId = await _kernelMemory.ImportDocumentAsync(documentKey, index: "document");
+
+        // var result = await _kernelMemory.AskAsync("Cuisson", index:"document", minRelevance: 0.7);
+
         var embeddingsDict = await _openAIService.GetEmbeddings(documentValue);
         var totalTokens = 0;
         var index = 0;
         foreach (var embedding in embeddingsDict)
         {
+#pragma warning disable SKEXP0001
             var memoryRecordMetadata = new MemoryRecordMetadata(true, $"{documentKey}-{index}", embedding.Value.Text, embedding.Value.Text.Substring(0, 100), string.Empty, string.Empty);
 
             var memoryRecord = new MemoryRecord(memoryRecordMetadata, embedding.Value.Embeddings.Data[0].Embedding, documentKey, DateTimeOffset.UtcNow);

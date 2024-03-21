@@ -1,12 +1,12 @@
-﻿using System.Threading;
-using MagellanGPT.Application.Common.Interfaces;
+﻿using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Application.Common.Models;
+using MagellanGPT.Application.Common.Security;
 using MagellanGPT.Domain.Entities;
 using MediatR;
 
 namespace MagellanGPT.Application.ChatbotUseCasesCommands;
 
-// [Authorize(Roles = "user")]
+[Authorize(Roles = "user")]
 public record CreateAICompletionSynchronously : IRequest<ResponseDto>
 {
     public Guid? ConversationId { get; set; }
@@ -40,15 +40,16 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
     /// <returns></returns>
     public async Task<ResponseDto> Handle(CreateAICompletionSynchronously request, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(_currentUserService.UserId, "ObjectId user not found");
-
         var initialization = await InitializeConversation(request, cancellationToken);
-
-        if (request.SystemPrompt is not null) initialization.Conversation.SystemPromt = request.SystemPrompt;
 
         await _openAiService.ProcessDemandSynchronously(initialization.Conversation);
 
         initialization.Conversation = await UpsertConversation(initialization.Conversation, initialization.IsExistingConversation, cancellationToken);
+
+        // TODO : Refactor 
+        initialization.User.Conversations.Add(initialization.Conversation);
+        _context.User.Update(initialization.User);
+        await _context.SaveChangesAsync(cancellationToken);
 
         var dialog = initialization.Conversation.Dialogs![^1];
 
@@ -62,15 +63,21 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
 
     private async Task<(Conversation Conversation, User User, bool IsExistingConversation)> InitializeConversation(CreateAICompletionSynchronously request, CancellationToken cancellationToken)
     {
+        // Process User
+        // TODO refactor create user if not exist
         var user = _currentUserService.UserId is not null ? _context.User.FirstOrDefault(user => user.ObjectId == _currentUserService.UserId) : null;
 
         if (user is null)
         {
             user = new User(_currentUserService.UserId ?? "fd285508-8ba1-4064-be24-30dfdea0b376");
             _context.User.Add(user);
-            await _context.SaveChangesAsync(cancellationToken);
         }
 
+        if (request.SystemPrompt is not null) user.SystemPrompt = request.SystemPrompt;
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        // Process Conversation
         Conversation? conversation = request.ConversationId is not null ? _context.Conversation.FirstOrDefault(c => c.Id == request.ConversationId) : null;
         bool isExistingConversation;
         if (conversation is not null)
@@ -102,6 +109,7 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
                     TokensResponse = 0,
                     CreatedAt = DateTime.Now,
                 }},
+                SystemPrompt = request.SystemPrompt,
                 Tokens = 0,
                 User = user
             };
@@ -120,13 +128,8 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
         bool isExistingConversation,
         CancellationToken cancellationToken)
     {
-        // var chat = _context.Chat.First();
-
         if (!isExistingConversation)
         {
-            
-            //chat.Conversations.Add(conversation);
-            //_context.Chat.Update(chat);
             _context.Conversation.Add(conversation);
         }
 

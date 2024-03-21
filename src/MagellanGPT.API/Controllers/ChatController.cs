@@ -4,6 +4,7 @@ using MagellanGPT.Application.ChatbotUseCases.Commands.CreateAICompletion;
 using MagellanGPT.Application.ChatbotUseCases.Queries;
 using MagellanGPT.Application.ChatbotUseCasesCommands;
 using MagellanGPT.Application.Common.Models;
+using MagellanGPT.Application.KnowledgeBaseUseCases.Queries;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 
@@ -75,6 +76,13 @@ public class ChatController : ApiControllerBase
     public async Task<ActionResult<List<ConversationDto>>> GetHistoricByUser()
     {
         return Ok(await Mediator.Send(new GetHistoricOfConversationByCurrentUser()));
+    }
+
+    [HttpGet]
+    [Route("knowledgebase")]
+    public async Task<ActionResult<List<ConversationDto>>> GetCompletionFromKnowledgeBase(string question)
+    {
+        return Ok(await Mediator.Send(new GetCompletionFromKnowledgeBase { Demand = question }));
     }
 }
 

@@ -9,4 +9,9 @@ public class Dialog : BaseEntity
     public int? TokensRequest { get; set; }
     public int? TokensResponse { get; set; }
     public DateTime CreatedAt { get; set; }
+
+    public Dialog()
+    {
+
+    }
 }
