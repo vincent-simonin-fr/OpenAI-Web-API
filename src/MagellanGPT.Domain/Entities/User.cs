@@ -4,13 +4,12 @@ public class User : BaseEntity
 {
     public string ObjectId { get; set; }
     public string PartitionKey { get; set; } = "User";
-    public List<Conversation> Conversations{ get; set; }
+    public List<Conversation> Conversations{ get; set; } = new List<Conversation>();
     public string? SystemPrompt { get; set; }
     public int? Tokens { get; set; }
 
     public User()
     {
-        Conversations = new List<Conversation>();
     }
 
     public User(string objectId) : this()

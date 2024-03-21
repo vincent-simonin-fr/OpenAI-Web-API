@@ -14,10 +14,8 @@ namespace MagellanGPT.Infrastructure.Persistence;
 /// </summary>
 public class ApplicationDbContext : DbContext, IApplicationDbContext
 {
-    public DbSet<Chat> Chat { get; set; }
     public DbSet<ApplicationUser> ApplicationUser { get; set; }
     public DbSet<User> User { get; set; }
-    public DbSet<Conversation> Conversation { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
@@ -26,20 +24,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     protected override void OnModelCreating(ModelBuilder builder)
     {
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-
-        // TODO : Refactor en configuration
-        builder.Entity<User>()
-        .ToContainer(nameof(User))
-        .HasPartitionKey(u => u.PartitionKey)
-        .HasNoDiscriminator()
-        .Property(o => o.Id).ToJsonProperty("id");
-
-        builder.Entity<Conversation>()
-        .ToContainer(nameof(Conversation))
-        .HasPartitionKey(u => u.PartitionKey)
-        .HasNoDiscriminator()
-        .Property(o => o.Id).ToJsonProperty("id");
-
+        
         builder.Entity<ApplicationUser>()
         .ToContainer(nameof(ApplicationUser))
         .HasPartitionKey(u => u.PartitionKey)

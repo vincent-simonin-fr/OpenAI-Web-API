@@ -44,10 +44,6 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
 
         await _openAiService.ProcessDemandSynchronously(initialization.Conversation);
 
-        initialization.Conversation = await UpsertConversation(initialization.Conversation, initialization.IsExistingConversation, cancellationToken);
-
-        // TODO : Refactor 
-        initialization.User.Conversations.Add(initialization.Conversation);
         _context.User.Update(initialization.User);
         await _context.SaveChangesAsync(cancellationToken);
 
@@ -65,7 +61,7 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
     {
         // Process User
         // TODO refactor create user if not exist
-        var user = _currentUserService.UserId is not null ? _context.User.FirstOrDefault(user => user.ObjectId == _currentUserService.UserId) : null;
+        var user = _currentUserService.UserId is not null ? _context.User.FirstOrDefault(user => user.ObjectId == _currentUserService.UserId && user.PartitionKey == "User") : null;
 
         if (user is null)
         {
@@ -77,8 +73,8 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        // Process Conversation
-        Conversation? conversation = request.ConversationId is not null ? _context.Conversation.FirstOrDefault(c => c.Id == request.ConversationId) : null;
+        Conversation? conversation = user.Conversations.Find(c => c.Id == request.ConversationId);
+
         bool isExistingConversation;
         if (conversation is not null)
         {
@@ -121,20 +117,5 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
         }
 
         return (conversation, user, isExistingConversation);
-    }
-
-    private async Task<Conversation> UpsertConversation(
-        Conversation conversation,
-        bool isExistingConversation,
-        CancellationToken cancellationToken)
-    {
-        if (!isExistingConversation)
-        {
-            _context.Conversation.Add(conversation);
-        }
-
-        await _context.SaveChangesAsync(cancellationToken);
-
-        return conversation;
     }
 }

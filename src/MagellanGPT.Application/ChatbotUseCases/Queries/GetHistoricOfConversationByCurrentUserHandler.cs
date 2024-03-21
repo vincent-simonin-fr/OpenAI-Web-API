@@ -1,11 +1,9 @@
-﻿using System.Collections.Concurrent;
-using System.Data;
+﻿using System.Data;
 using System.Text.Json;
 using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Application.Common.Models;
 using MagellanGPT.Application.Common.Security;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace MagellanGPT.Application.ChatbotUseCases.Queries;
 
@@ -25,9 +23,9 @@ public class GetHistoricOfConversationByCurrentUserHandler : IRequestHandler<Get
 
     public async Task<IEnumerable<ConversationDto>> Handle(GetHistoricOfConversationByCurrentUser request, CancellationToken cancellationToken)
     {
-        var conversation = _context.Conversation.Where(conversation => EF.Property<Guid>(conversation, "UserId") == Guid.Parse(_currentUserService.UserId)).ToList();
+        var user = _context.User.FirstOrDefault(user => user.ObjectId == _currentUserService.UserId && user.PartitionKey == "User");
 
-        return conversation.AsQueryable().Select(ConversationDto.Projection).ToList();
+        return user.Conversations.AsQueryable().Select(ConversationDto.Projection).ToList();
     }
 
     // TODO : Pour étude parser à refactoriser

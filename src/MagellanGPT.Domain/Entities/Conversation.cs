@@ -8,7 +8,6 @@ public class Conversation : BaseEntity
     public int? Tokens { get; set; }
     public string? SystemPrompt { get; set; }
     public User User { get; set; }
-    public Chat Chat { get; set; }
 
     public Conversation()
     {
