@@ -52,7 +52,7 @@ public class ChatController : ApiControllerBase
     public async Task<ActionResult<ResponseDto>> PostSynchrone([FromBody] CreateAICompletionSynchronously request)
     {
         var completions = await Mediator.Send(request);
-
+        Console.WriteLine("Sortie controller");
         return completions;
     }
 

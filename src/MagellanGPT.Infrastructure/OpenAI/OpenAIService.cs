@@ -143,11 +143,15 @@ public class OpenAIService : IOpenAIService
         if (responseWithoutStream.Choices[0].Message.Content.Contains("###"))
         {
             var responseWithTitle = responseWithoutStream.Choices[0].Message.Content.Split("###", StringSplitOptions.RemoveEmptyEntries);
-            title = responseWithTitle[0];
-            response = responseWithTitle[1].Replace("\n\n", "").Trim();
+
+            if(responseWithTitle.Length >= 2)
+            {
+                title = responseWithTitle[0];
+                response = responseWithTitle[1].Replace("\n\n", "").Trim();
+            }
 
             conversation.Title = title;
-            conversation.Dialogs[^1].Answer = response;
+            conversation.Dialogs[^1].Answer = response ?? responseWithTitle[0];
         }
         else
         {

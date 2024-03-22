@@ -16,8 +16,13 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 {
     public DbSet<ApplicationUser> ApplicationUser { get; set; }
     public DbSet<User> User { get; set; }
+    public DbSet<Organisation> Organisation { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+    {
+    }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
     }
 

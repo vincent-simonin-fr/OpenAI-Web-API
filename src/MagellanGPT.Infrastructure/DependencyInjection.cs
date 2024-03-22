@@ -33,12 +33,14 @@ public static class DependencyInjection
         var dbName = configuration.GetSection("CosmosDb:DbName").Value!;
 
         services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseCosmos(accountEndPoint, accountKey, dbName, options =>
-            {
-                // https://github.com/dotnet/EntityFramework.Docs/blob/main/samples/core/Cosmos/ModelBuilding
-                options.ConnectionMode(ConnectionMode.Gateway);
-            }
-            ));
+            options
+                .UseCosmos(accountEndPoint, accountKey, dbName, options =>
+                {
+                    // https://github.com/dotnet/EntityFramework.Docs/blob/main/samples/core/Cosmos/ModelBuilding
+                    options.ConnectionMode(ConnectionMode.Gateway);
+                })
+                .LogTo(Console.WriteLine)
+            );
 
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
 
