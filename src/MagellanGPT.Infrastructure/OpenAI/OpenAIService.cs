@@ -70,15 +70,15 @@ public class OpenAIService : IOpenAIService
             DeploymentName = _deploymentName,
             Messages =
             {
-                new ChatRequestSystemMessage($"Tu es un expert quelque soit le domaine." +
+                new ChatRequestSystemMessage($"Tu es expert pour généré des réponses pertinentes." +
                 $"Ta tâche est d'aider à répondre à une question en utilisant un document. " +
                 $"La première étape est d'extraire des informations pertinentes du document, délimité par ###" +
                 $". Génère une réponse. " +
-                $"### {document} ###"),
+                $"###  ###"),
                 new ChatRequestUserMessage(question),
             },
             Temperature = 1,
-            MaxTokens = 800,
+            MaxTokens = 900,
             FrequencyPenalty = 0,
             PresencePenalty = 0,
         });
@@ -234,8 +234,8 @@ public class OpenAIService : IOpenAIService
         var embeddings = new Dictionary<int, EmbeddingsDto>();
 #pragma warning disable SKEXP0055
 #pragma warning disable SKEXP0050
-        var lines = TextChunker.SplitPlainTextLines(document, 40);
-        var paragraphs = TextChunker.SplitPlainTextParagraphs(lines, 120);
+        var lines = TextChunker.SplitPlainTextLines(document, 300);
+        var paragraphs = TextChunker.SplitPlainTextParagraphs(lines, 300);
 
         var index = 1;
 
@@ -250,6 +250,7 @@ public class OpenAIService : IOpenAIService
             try
             {
                 var returnValue = _client.GetEmbeddings(embeddingOptions);
+
                 embeddings.Add(index, new EmbeddingsDto() { Text = paragraph, Embeddings = returnValue.Value });
 
             }

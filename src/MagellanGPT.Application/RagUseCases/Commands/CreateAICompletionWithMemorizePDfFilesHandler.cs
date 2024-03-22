@@ -66,7 +66,7 @@ public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<Cre
         // Requête de complétion de la demande
         await _openAIService.ProcessDemandWithDatasource(conversation, document.ToString());
 
-        return new ResponseDto
+        var responseDto = new ResponseDto
         {
             Id = "Diiage2024",
             ConversationId = conversation.Id,
@@ -75,6 +75,7 @@ public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<Cre
             + (int)conversation.Dialogs![^1].TokensResponse!
             + process.TotalTokens
         };
+        return responseDto;
     }
 
     private async Task<(Dictionary<string, string> Documents, int TotalTokens)> ProcessAndStorePdf(List<string> filePathList)

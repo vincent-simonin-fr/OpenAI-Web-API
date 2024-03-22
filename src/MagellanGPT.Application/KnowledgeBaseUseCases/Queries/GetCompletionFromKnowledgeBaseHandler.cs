@@ -80,7 +80,7 @@ public class GetCompletionFromKnowledgeBaseHandler : IRequestHandler<GetCompleti
             $"\n \n### REF_DOC_1\n<contenu du doc 1>\n \n### REF_DOC_2\n<contenu du doc 2>" +
             $"\n \n### QUESTION\n<la question posée>\n \n \ntes réponses sont au format suivant:" +
             $"\n \n<contenu de la réponse, incluant des renvois aux références " +
-            $"entre crochet lorsque nécessaire.par exemple : [1] "
+            $"entre crochet lorsque nécessaire.par exemple : [1] \n Citations : [titre du document]"
         };
 
         return conversation;

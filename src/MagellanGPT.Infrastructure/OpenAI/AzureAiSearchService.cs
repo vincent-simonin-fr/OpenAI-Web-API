@@ -74,9 +74,9 @@ public class AzureAiSearchService : IAzureAiSearchService
             })
             .WithCustomTextPartitioningOptions(new TextPartitioningOptions
             {
-                MaxTokensPerLine = 60,
-                MaxTokensPerParagraph = 150,
-                OverlappingTokens = 20
+                MaxTokensPerLine = 40,
+                MaxTokensPerParagraph = 500,
+                OverlappingTokens = 200
             })
             .Build<MemoryServerless>();
 
@@ -102,7 +102,7 @@ public class AzureAiSearchService : IAzureAiSearchService
     /// <returns></returns>
     public async Task<SearchResult> SearchMemoryAsync(string query)
     {
-        var searchResult = await _kernelMemory.SearchAsync(query: query, index: "document", limit: 10, minRelevance: 0.5);
+        var searchResult = await _kernelMemory.SearchAsync(query: query, index: "document", limit: 4, minRelevance: 0.75);
 
         return searchResult;
     }
@@ -119,7 +119,7 @@ public class AzureAiSearchService : IAzureAiSearchService
         // TODO L'utilisation de kernel memory est à améliorer
         // L'import de document fonctionne correctement mais les erreur ne sont pas géré
         // Le requêtage ne fonctionne pas, cela est proprablement du à la configuration de la pipeline
-        var documentId = await _kernelMemory.ImportDocumentAsync(documentKey, index: "document");
+        await _kernelMemory.ImportDocumentAsync(documentKey, index: "document");
 
         // var result = await _kernelMemory.AskAsync("Cuisson", index:"document", minRelevance: 0.7);
 
