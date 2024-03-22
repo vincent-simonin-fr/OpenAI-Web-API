@@ -1,10 +1,7 @@
-﻿using System.Threading;
-using MagellanGPT.Application.Common.Interfaces;
+﻿using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Application.Common.Models;
-using MagellanGPT.Application.Common.Security;
 using MagellanGPT.Domain.Entities;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace MagellanGPT.Application.ChatbotUseCasesCommands;
 
@@ -102,7 +99,7 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
 
         if (user is null)
         {
-            user = new User(Guid.NewGuid().ToString());
+            user = new User(_currentUserService.UserId);
             _context.User.Add(user);
         }
 
