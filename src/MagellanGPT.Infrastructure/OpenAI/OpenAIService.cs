@@ -74,7 +74,7 @@ public class OpenAIService : IOpenAIService
                 $"Ta tâche est d'aider à répondre à une question en utilisant un document. " +
                 $"La première étape est d'extraire des informations pertinentes du document, délimité par ###" +
                 $". Génère une réponse. " +
-                $"###  ###"),
+                $"### {document} ###"),
                 new ChatRequestUserMessage(question),
             },
             Temperature = 1,
@@ -234,8 +234,8 @@ public class OpenAIService : IOpenAIService
         var embeddings = new Dictionary<int, EmbeddingsDto>();
 #pragma warning disable SKEXP0055
 #pragma warning disable SKEXP0050
-        var lines = TextChunker.SplitPlainTextLines(document, 300);
-        var paragraphs = TextChunker.SplitPlainTextParagraphs(lines, 300);
+        var lines = TextChunker.SplitPlainTextLines(document, 40);
+        var paragraphs = TextChunker.SplitPlainTextParagraphs(lines, 200);
 
         var index = 1;
 

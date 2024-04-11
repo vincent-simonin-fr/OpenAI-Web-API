@@ -9,7 +9,7 @@ namespace MagellanGPT.Application.ChatbotUseCasesCommands;
 public record CreateAICompletionSynchronously : IRequest<ResponseDto>
 {
     public Guid? ConversationId { get; set; }
-    public string? LlmDeploymentName { get; set; } = "ChatGPT35Turbo";
+    public string? LlmDeploymentName { get; set; } = "deployment-gpt35-rgmagellanrodg1";
     public required string Demand { get; set; }
     public string? SystemPrompt { get; set; }
 }
@@ -17,9 +17,9 @@ public record CreateAICompletionSynchronously : IRequest<ResponseDto>
 public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICompletionSynchronously, ResponseDto>
 {
     private readonly IOpenAIService _openAiService;
+    // private readonly ISemanticKernelProvider _semanticKernel;
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUserService;
-    private Organisation _organisation;
 
     private static readonly SemaphoreSlim _writeLock = new SemaphoreSlim(1, 1);
 
@@ -28,8 +28,7 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
         _openAiService = openAIService;
         _context = context;
         _currentUserService = currentUserService;
-
-        _organisation = _context.Organisation.First(o => o.PartitionKey == "Organisation");
+        //_semanticKernel = semanticKernel;
     }
 
     /// <summary>
@@ -45,6 +44,7 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
     public async Task<ResponseDto> Handle(CreateAICompletionSynchronously request, CancellationToken cancellationToken)
     {
         var initialization = await InitializeConversation(request, cancellationToken);
+        // await _semanticKernel.ProcessUserRequest(initialization.Conversation);
 
         if(initialization.User.Quota.Token >= 4000)
         {
@@ -77,11 +77,7 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
         _context.User.Update(initialization.User);
         await _context.SaveChangesAsync(cancellationToken);
 
-        Console.WriteLine("Before Quota");
-
         UpdateQuotaOrganization((int)dialog.TokensRequest! + (int)dialog.TokensResponse!);
-        
-        Console.WriteLine("After Quota");
 
         return new ResponseDto {
             Id = "MagellanGPT",
@@ -99,7 +95,7 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
 
         if (user is null)
         {
-            user = new User(_currentUserService.UserId);
+            user = new User(_currentUserService.UserId ?? Guid.NewGuid().ToString());
             _context.User.Add(user);
         }
 
@@ -160,8 +156,8 @@ public class CreateAICompletionSynchronouslyHandler : IRequestHandler<CreateAICo
         try
         {
             Console.WriteLine("Pending Before Quota");
-            _organisation.Quota.Token += tokens;
-            _context.Organisation.Update(_organisation);
+            var organisation = _context.Organisation.First(o => o.PartitionKey == "Organisation");
+            organisation.Quota.Token += tokens;
             await _context.SaveChangesAsync(CancellationToken.None);
             Console.WriteLine("Pending After Quota");
         }
