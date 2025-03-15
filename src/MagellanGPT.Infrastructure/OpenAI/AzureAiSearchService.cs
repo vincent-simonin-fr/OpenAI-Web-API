@@ -23,6 +23,7 @@ public class AzureAiSearchService : IAzureAiSearchService
 
     private readonly IKernelMemory _kernelMemory;
 
+#pragma warning disable SKEXP0020
 #pragma warning disable SKEXP0021
     private readonly AzureAISearchMemoryStore _azureAISearchMemoryStore;
     private readonly IOpenAIService _openAIService;
@@ -52,7 +53,6 @@ public class AzureAiSearchService : IAzureAiSearchService
                 Endpoint = aiSearchEndpoint,
                 APIKey = aiSearchKey,
                 Auth = AzureAISearchConfig.AuthTypes.APIKey,
-                
             })
             .WithSearchClientConfig(new SearchClientConfig
             {
@@ -74,12 +74,13 @@ public class AzureAiSearchService : IAzureAiSearchService
             })
             .WithCustomTextPartitioningOptions(new TextPartitioningOptions
             {
-                MaxTokensPerLine = 40,
-                MaxTokensPerParagraph = 500,
+                MaxTokensPerLine = 50,
+                MaxTokensPerParagraph = 800,
                 OverlappingTokens = 200
             })
-            .Build<MemoryServerless>();
+        .Build<MemoryServerless>();
 
+#pragma warning disable SKEXP0020
         _openAIService = openAIService;
         _azureAISearchMemoryStore = new AzureAISearchMemoryStore(aiSearchEndpoint, aiSearchKey);
     }
@@ -102,7 +103,8 @@ public class AzureAiSearchService : IAzureAiSearchService
     /// <returns></returns>
     public async Task<SearchResult> SearchMemoryAsync(string query)
     {
-        var searchResult = await _kernelMemory.SearchAsync(query: query, index: "document", limit: 4, minRelevance: 0.75);
+        var memo = new MemoryFilter() {  };
+        var searchResult = await _kernelMemory.SearchAsync(query: query, index: "doc", limit: 4, minRelevance: 0.75);
 
         return searchResult;
     }
@@ -119,9 +121,9 @@ public class AzureAiSearchService : IAzureAiSearchService
         // TODO L'utilisation de kernel memory est à améliorer
         // L'import de document fonctionne correctement mais les erreur ne sont pas géré
         // Le requêtage ne fonctionne pas, cela est proprablement du à la configuration de la pipeline
-        await _kernelMemory.ImportDocumentAsync(documentKey, index: "document");
-
-        // var result = await _kernelMemory.AskAsync("Cuisson", index:"document", minRelevance: 0.7);
+        // https://learn.microsoft.com/fr-fr/azure/search/index-add-language-analyzers
+        await _kernelMemory.ImportDocumentAsync(documentKey, index: "doc");
+        // var result = await _kernelMemory.AskAsync("Cuisson", index:"doc", minRelevance: 0.7);
 
         var embeddingsDict = await _openAIService.GetEmbeddings(documentValue);
         var totalTokens = 0;
@@ -131,6 +133,7 @@ public class AzureAiSearchService : IAzureAiSearchService
 #pragma warning disable SKEXP0001
             var memoryRecordMetadata = new MemoryRecordMetadata(true, $"{documentKey}-{index}", embedding.Value.Text, embedding.Value.Text.Substring(0, 100), string.Empty, string.Empty);
 
+#pragma warning disable SKEXP0020
             var memoryRecord = new MemoryRecord(memoryRecordMetadata, embedding.Value.Embeddings.Data[0].Embedding, documentKey, DateTimeOffset.UtcNow);
 
             await _azureAISearchMemoryStore.UpsertAsync(MemoryCollectionName, memoryRecord);

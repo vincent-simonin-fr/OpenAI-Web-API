@@ -1,4 +1,7 @@
-﻿using MagellanGPT.Application.Common.Interfaces;
+﻿using System.Configuration;
+using Azure;
+using Azure.AI.OpenAI;
+using MagellanGPT.Application.Common.Interfaces;
 using MagellanGPT.Infrastructure.Constant;
 using MagellanGPT.Infrastructure.Identity;
 using MagellanGPT.Infrastructure.KeyVault;
@@ -9,6 +12,7 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.SemanticKernel;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -49,6 +53,15 @@ public static class DependencyInjection
         services.AddScoped<IOpenAIService, OpenAIService>();
 
         services.AddScoped<IAzureAiSearchService, AzureAiSearchService>();
+
+        services.AddScoped<ISemanticKernelProvider, SemanticKernelProvider>();
+
+        services.AddKernel()
+            .AddAzureOpenAIChatCompletion(
+                "ChatGPT35Turbo",
+                configuration.GetSection("OpenAi:Endpoint").Value!,
+                SecretManager.GetInstance().OpenAiKey,
+                serviceId: "ChatCompletion");
 
         return services;
     }

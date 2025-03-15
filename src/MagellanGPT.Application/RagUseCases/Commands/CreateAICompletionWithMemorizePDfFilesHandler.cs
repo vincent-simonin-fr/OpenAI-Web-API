@@ -17,7 +17,7 @@ public record CreateAICompletionWithMemorizePDfFiles : IRequest<ResponseDto>
     public string? UserId { get; set; }
     public string? ConversationId { get; set; }
     public string? LlmDeploymentName { get; set; } = "ChatGPT35Turbo";
-    public required List<string>? FilePathList { get; set; }
+    public required List<string> FilePathList { get; set; }
     public string Demand { get; set; }
 };
 
@@ -26,12 +26,14 @@ public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<Cre
     private readonly IOpenAIService _openAIService;
     private readonly IAzureAiSearchService _azureAiSearchService;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ISemanticKernelProvider _semanticKernel;
 
-    public CreateAICompletionWithMemorizePDfFilesHandler(IOpenAIService openAIService, IAzureAiSearchService azureAiSearchService, ICurrentUserService currentUserService)
+    public CreateAICompletionWithMemorizePDfFilesHandler(IOpenAIService openAIService, IAzureAiSearchService azureAiSearchService, ICurrentUserService currentUserService, ISemanticKernelProvider semanticKernel)
     {
         _openAIService = openAIService;
         _azureAiSearchService = azureAiSearchService;
         _currentUserService = currentUserService;
+        _semanticKernel = semanticKernel;
     }
 
     /// <summary>
@@ -48,9 +50,10 @@ public class CreateAICompletionWithMemorizePDfFilesHandler : IRequestHandler<Cre
     /// <returns>Task<IAsyncEnumerable<StreamingChatCompletionsUpdate>></returns>
     public async Task<ResponseDto> Handle(CreateAICompletionWithMemorizePDfFiles request, CancellationToken cancellationToken)
     {
-        request.UserId = _currentUserService.UserId;
-
         var conversation = InitializeConversation(request);
+
+        //await _semanticKernel.StoreDocumentAsync(request.FilePathList);
+        //var yo = await _semanticKernel.ProcessUserRequest(conversation);
 
         // Traitement des PDF
         var process = await ProcessAndStorePdf(request.FilePathList);

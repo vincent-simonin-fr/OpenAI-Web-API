@@ -77,8 +77,10 @@ public class ChatBotUseCasesTests
             _createAICompletionSynchronously = new() { Demand = demand };
 
             var mockDbSetUser = GetDbSetMockedOf<User>();
+            var mockDbSetOrganisation = GetDbSetMockedOf<Organisation>();
 
             _dbContext.Setup(c => c.User).Returns(mockDbSetUser);
+            _dbContext.Setup(c => c.Organisation).Returns(mockDbSetOrganisation);
 
             // Arrange
             var response = _createAICompletionSynchronouslyHandler.Handle(_createAICompletionSynchronously, CancellationToken.None).Result;

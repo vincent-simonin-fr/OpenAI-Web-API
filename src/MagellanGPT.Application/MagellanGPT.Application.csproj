@@ -47,11 +47,11 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.2" />
-    <PackageReference Include="Microsoft.SemanticKernel" Version="1.4.0" />
-    <PackageReference Include="Microsoft.KernelMemory.DataFormats.AzureAIDocIntel" Version="0.32.240307.3" />
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.6.3" />
+    <PackageReference Include="Microsoft.KernelMemory.DataFormats.AzureAIDocIntel" Version="0.35.240321.1" />
     <PackageReference Include="UglyToad.PdfPig" Version="1.7.0-custom-5" />
     <PackageReference Include="UglyToad.PdfPig.DocumentLayoutAnalysis" Version="1.7.0-custom-5" />
-    <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureAISearch" Version="1.4.0-alpha" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureAISearch" Version="1.6.3-alpha" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\SonarLint.xml">

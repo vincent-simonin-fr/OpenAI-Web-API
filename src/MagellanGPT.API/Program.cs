@@ -1,6 +1,7 @@
 ﻿using Azure.Identity;
 using MagellanGPT.API;
 using MagellanGPT.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,7 @@ builder.Services.AddSwaggerGen();
 
 // Load configuration from Azure App Configuration
 // https://learn.microsoft.com/fr-fr/azure/azure-app-configuration/howto-integrate-azure-managed-service-identity?pivots=framework-dotnet
+var test = builder.Configuration["AppConfig:ConnectionString"];
 builder.Configuration.AddAzureAppConfiguration(builder.Configuration["AppConfig:ConnectionString"]);
 
 // Console.WriteLine(builder.Configuration["CosmosDb:DbName"]);

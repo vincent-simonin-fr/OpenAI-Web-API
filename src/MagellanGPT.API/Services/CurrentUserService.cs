@@ -13,7 +13,7 @@ namespace MagellanGPT.API.Services;
 public class CurrentUserService : ICurrentUserService
 {
     // Pem ou Cert sont ok
-    private readonly string _certFilePath = "certificate.pem";
+    private readonly string _certFilePath = "certificate2.pem";
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     public CurrentUserService(IHttpContextAccessor httpContextAccessor)
